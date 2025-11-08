@@ -166,14 +166,10 @@ def cmd_switch_to(args):
         return 1
 
     session_id = args.session_id
-    working_directory = (
-        Path(args.working_directory) if args.working_directory else None
-    )
+    working_directory = Path(args.working_directory) if args.working_directory else None
 
     if not session_id and not working_directory:
-        output_error(
-            "Must provide --session-id or --working-directory", args.output
-        )
+        output_error("Must provide --session-id or --working-directory", args.output)
         return 1
 
     paste_script = get_paste_script(args, service)
@@ -379,7 +375,10 @@ def main():
         "--session-id", "--id", dest="session_id", help="Target session ID"
     )
     switch_parser.add_argument(
-        "--working-directory", "--wd", dest="working_directory", help="Target working directory"
+        "--working-directory",
+        "--wd",
+        dest="working_directory",
+        help="Target working directory",
     )
     switch_parser.add_argument(
         "--subdirectory-ok",
@@ -391,9 +390,7 @@ def main():
     tab_parser = subparsers.add_parser("new-tab", help="Create new tab")
     add_common_args(tab_parser)
     add_paste_args(tab_parser)
-    tab_parser.add_argument(
-        "working_directory", help="Working directory for new tab"
-    )
+    tab_parser.add_argument("working_directory", help="Working directory for new tab")
 
     # new-window command
     window_parser = subparsers.add_parser("new-window", help="Create new window")

@@ -46,7 +46,9 @@ def create_terminal_implementation(
             return terminal
 
     # Unsupported terminal
-    logger.warning(f"Unsupported terminal: {term_program or 'unknown'} on platform {platform_name}")
+    logger.warning(
+        f"Unsupported terminal: {term_program or 'unknown'} on platform {platform_name}"
+    )
     return None
 
 

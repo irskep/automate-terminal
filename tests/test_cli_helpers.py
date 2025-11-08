@@ -59,6 +59,7 @@ def test_output_error_with_extra_data(capsys):
 
 def test_get_paste_script_shell_specific(mock_args):
     """Test shell-specific script is used when available."""
+
     class FakeService:
         def get_shell_name(self):
             return "zsh"
@@ -70,6 +71,7 @@ def test_get_paste_script_shell_specific(mock_args):
 
 def test_get_paste_script_generic_only(mock_args):
     """Test generic script is used when no shell-specific script."""
+
     class FakeService:
         def get_shell_name(self):
             return "bash"
@@ -88,6 +90,7 @@ def test_get_paste_script_generic_only(mock_args):
 
 def test_get_paste_script_both_joined(mock_args):
     """Test both shell-specific and generic scripts are joined."""
+
     class FakeService:
         def get_shell_name(self):
             return "zsh"
@@ -99,6 +102,7 @@ def test_get_paste_script_both_joined(mock_args):
 
 def test_get_paste_script_none(mock_args):
     """Test returns None when no scripts provided."""
+
     class FakeService:
         def get_shell_name(self):
             return "bash"

@@ -41,8 +41,9 @@ def test_cmd_check_success(mock_args, capsys):
 
 def test_cmd_check_terminal_not_found(mock_args, capsys):
     """Test check command returns 1 when terminal not supported."""
-    with patch("automate_terminal.cli.TerminalService") as mock_service, patch(
-        "os.getenv", return_value="unsupported"
+    with (
+        patch("automate_terminal.cli.TerminalService") as mock_service,
+        patch("os.getenv", return_value="unsupported"),
     ):
         mock_service.side_effect = TerminalNotFoundError()
 

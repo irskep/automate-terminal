@@ -54,13 +54,17 @@ class FakeTerminal:
     def session_exists(self, session_id: str) -> bool:
         return True
 
-    def switch_to_session(self, session_id: str, paste_script: str | None = None) -> bool:
+    def switch_to_session(
+        self, session_id: str, paste_script: str | None = None
+    ) -> bool:
         return True
 
     def open_new_tab(self, working_directory, paste_script: str | None = None) -> bool:
         return True
 
-    def open_new_window(self, working_directory, paste_script: str | None = None) -> bool:
+    def open_new_window(
+        self, working_directory, paste_script: str | None = None
+    ) -> bool:
         return True
 
     def list_sessions(self) -> list[dict[str, str]]:
@@ -81,6 +85,7 @@ def fake_applescript():
 @pytest.fixture
 def mock_args():
     """Factory for creating mock argument namespaces."""
+
     def _make_args(**kwargs):
         defaults = {
             "output": "text",
@@ -96,4 +101,5 @@ def mock_args():
         }
         defaults.update(kwargs)
         return argparse.Namespace(**defaults)
+
     return _make_args

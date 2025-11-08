@@ -25,7 +25,9 @@ from automate_terminal.terminals.iterm2 import ITerm2Terminal
         (GhosttyMacTerminal, "ghostty", "Linux", False),
     ],
 )
-def test_terminal_detect(terminal_cls, term_program, platform, expected, fake_applescript):
+def test_terminal_detect(
+    terminal_cls, term_program, platform, expected, fake_applescript
+):
     """Test terminal detection based on TERM_PROGRAM and platform."""
     terminal = terminal_cls(fake_applescript)
     assert terminal.detect(term_program, platform) == expected
