@@ -11,7 +11,7 @@ pip install automate-terminal
 ```
 
 ```bash
-mise install pip:automate-terminal"
+mise install pip:automate-terminal
 ```
 
 Or install from source:
@@ -24,9 +24,13 @@ pip install -e .
 
 ## Supported Terminals
 
-- **iTerm2** - Full support (session management, tabs, windows)
-- **Terminal.app** - Full support (session management, tabs, windows)
-- **Ghostty** - Basic support (tabs, windows; no session management)
+| Terminal     | Create Tabs | Create Windows | Detect Session ID | Switch to Session | List Sessions | Paste Commands |
+|--------------|-------------|----------------|-------------------|-------------------|---------------|----------------|
+| iTerm2       | ✅          | ✅             | ✅                | ✅                | ✅            | ✅             |
+| Terminal.app | ✅          | ✅             | ✅*               | ✅                | ❌            | ✅             |
+| Ghostty      | ✅          | ✅             | ❌                | ❌                | ❌            | ✅             |
+
+\* Terminal.app uses working directory as session identifier (no native session ID support)
 
 Other terminals are not supported and will error cleanly.
 
