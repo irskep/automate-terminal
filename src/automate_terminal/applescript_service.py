@@ -60,6 +60,8 @@ class AppleScriptService:
     def execute_with_result(self, script: str) -> str | None:
         """Execute AppleScript and return the output string.
 
+        Note: This runs even in dry-run mode since it's a read-only query.
+
         Args:
             script: AppleScript code to execute
 
@@ -71,9 +73,8 @@ class AppleScriptService:
             return None
 
         if self.dry_run:
-            logger.info("DRY RUN - Would execute AppleScript:")
-            logger.info(script)
-            return "(dry-run: no output)"
+            logger.debug("DRY RUN - Executing query AppleScript:")
+            logger.debug(script)
 
         try:
             result = run_command(

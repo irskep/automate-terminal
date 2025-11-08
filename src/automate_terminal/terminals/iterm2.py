@@ -218,14 +218,13 @@ class ITerm2Terminal(BaseTerminal):
         return sessions
 
     def find_session_by_working_directory(self, target_path: str) -> str | None:
-        """Find a session ID that matches the given working directory or is within it."""
+        """Find a session ID that matches the given working directory."""
         sessions = self.list_sessions()
         target_path = str(Path(target_path).resolve())  # Normalize path
 
         for session in sessions:
             session_path = str(Path(session["working_directory"]).resolve())
-            # Check if the session is in the target directory or any subdirectory
-            if session_path.startswith(target_path):
+            if session_path == target_path:
                 return session["session_id"]
 
         return None

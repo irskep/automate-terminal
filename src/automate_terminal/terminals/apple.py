@@ -348,6 +348,18 @@ class TerminalAppTerminal(BaseTerminal):
 
         return sessions
 
+    def find_session_by_working_directory(self, target_path: str) -> str | None:
+        """Find a session ID that matches the given working directory."""
+        sessions = self.list_sessions()
+        target_path = str(Path(target_path).resolve())  # Normalize path
+
+        for session in sessions:
+            session_path = str(Path(session["working_directory"]).resolve())
+            if session_path == target_path:
+                return session["session_id"]
+
+        return None
+
     def _can_create_tabs(self) -> bool:
         return True
 
