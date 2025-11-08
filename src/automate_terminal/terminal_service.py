@@ -102,13 +102,24 @@ class TerminalService:
 
         return self.terminal.switch_to_session(session_id, paste_script)
 
+    def find_session_by_directory(
+        self, working_directory: Path, subdirectory_ok: bool = False
+    ) -> str | None:
+        """Check if a session exists by working directory without switching to it."""
+        return self.terminal.find_session_by_working_directory(
+            str(working_directory), subdirectory_ok=subdirectory_ok
+        )
+
     def switch_to_session_by_directory(
-        self, working_directory: Path, paste_script: str | None = None
+        self,
+        working_directory: Path,
+        paste_script: str | None = None,
+        subdirectory_ok: bool = False,
     ) -> bool:
         """Switch to a session by working directory."""
         # Try to find a session in the target directory
         session_id = self.terminal.find_session_by_working_directory(
-            str(working_directory)
+            str(working_directory), subdirectory_ok=subdirectory_ok
         )
 
         if not session_id:
@@ -121,6 +132,7 @@ class TerminalService:
         session_id: str | None = None,
         working_directory: Path | None = None,
         paste_script: str | None = None,
+        subdirectory_ok: bool = False,
     ) -> bool:
         """Switch to session by ID or working directory (ID takes precedence)."""
         # Try session ID first
@@ -130,7 +142,9 @@ class TerminalService:
 
         # Fall back to working directory
         if working_directory:
-            return self.switch_to_session_by_directory(working_directory, paste_script)
+            return self.switch_to_session_by_directory(
+                working_directory, paste_script, subdirectory_ok=subdirectory_ok
+            )
 
         return False
 

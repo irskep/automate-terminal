@@ -110,3 +110,72 @@ def test_switch_to_calls_service_with_working_directory(mock_args):
         mock_instance.switch_to_session.assert_called_once()
         call_args = mock_instance.switch_to_session.call_args
         assert call_args.kwargs["working_directory"] == Path("/tmp/test")
+
+
+def test_switch_to_passes_subdirectory_ok_flag(mock_args):
+    """Test switch-to passes subdirectory_ok flag to service."""
+    with patch("automate_terminal.cli.TerminalService") as mock_service:
+        mock_instance = Mock()
+        mock_instance.switch_to_session.return_value = True
+        mock_instance.get_terminal_name.return_value = "iTerm2"
+        mock_instance.get_shell_name.return_value = "zsh"
+        mock_service.return_value = mock_instance
+
+        args = mock_args(
+            with_session_id=None,
+            with_working_directory="/tmp/test",
+            paste_and_run=None,
+            subdirectory_ok=True,
+        )
+        cmd_switch_to(args)
+
+        call_args = mock_instance.switch_to_session.call_args
+        assert call_args.kwargs["subdirectory_ok"] is True
+
+
+def test_switch_to_error_message_with_subdirectories(mock_args, capsys):
+    """Test error message mentions --subdirectory-ok when subdirectories exist."""
+    with patch("automate_terminal.cli.TerminalService") as mock_service:
+        mock_instance = Mock()
+        mock_instance.switch_to_session.return_value = False
+        mock_instance.find_session_by_directory.return_value = "some-session-id"
+        mock_instance.get_terminal_name.return_value = "iTerm2"
+        mock_service.return_value = mock_instance
+
+        args = mock_args(
+            output="text",
+            with_session_id=None,
+            with_working_directory="/tmp/test",
+            paste_and_run=None,
+            subdirectory_ok=False,
+        )
+        result = cmd_switch_to(args)
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "--subdirectory-ok" in captured.err
+        assert "subdirectories" in captured.err
+
+
+def test_switch_to_error_message_without_subdirectories(mock_args, capsys):
+    """Test normal error message when no subdirectories exist."""
+    with patch("automate_terminal.cli.TerminalService") as mock_service:
+        mock_instance = Mock()
+        mock_instance.switch_to_session.return_value = False
+        mock_instance.find_session_by_directory.return_value = None
+        mock_instance.get_terminal_name.return_value = "iTerm2"
+        mock_service.return_value = mock_instance
+
+        args = mock_args(
+            output="text",
+            with_session_id=None,
+            with_working_directory="/tmp/test",
+            paste_and_run=None,
+            subdirectory_ok=False,
+        )
+        result = cmd_switch_to(args)
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "No matching session found" in captured.err
+        assert "--subdirectory-ok" not in captured.err

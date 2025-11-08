@@ -177,12 +177,14 @@ def cmd_switch_to(args):
         return 1
 
     paste_script = get_paste_script(args, service)
+    subdirectory_ok = getattr(args, "subdirectory_ok", False)
 
     try:
         success = service.switch_to_session(
             session_id=session_id,
             working_directory=working_directory,
             paste_script=paste_script,
+            subdirectory_ok=subdirectory_ok,
         )
 
         if success:
@@ -200,8 +202,17 @@ def cmd_switch_to(args):
             output(args.output, data, "Switched to existing session")
             return 0
         else:
+            # Check if subdirectories exist when exact match failed
+            error_msg = "No matching session found"
+            if not subdirectory_ok and working_directory:
+                found_in_subdir = service.find_session_by_directory(
+                    working_directory, subdirectory_ok=True
+                )
+                if found_in_subdir:
+                    error_msg = f"No session found in {working_directory}, but sessions exist in subdirectories. Use --subdirectory-ok to match them."
+
             output_error(
-                "No matching session found",
+                error_msg,
                 args.output,
                 terminal=service.get_terminal_name(),
             )
@@ -367,6 +378,11 @@ def main():
     switch_parser.add_argument("--with-session-id", help="Target session ID")
     switch_parser.add_argument(
         "--with-working-directory", help="Target working directory"
+    )
+    switch_parser.add_argument(
+        "--subdirectory-ok",
+        action="store_true",
+        help="Allow matching sessions in subdirectories of target directory",
     )
 
     # new-tab command

@@ -84,8 +84,15 @@ class BaseTerminal(ABC):
         """List all sessions with their working directories."""
         return []
 
-    def find_session_by_working_directory(self, target_path: str) -> str | None:
-        """Find a session ID that matches the given working directory or is within it."""
+    def find_session_by_working_directory(
+        self, target_path: str, subdirectory_ok: bool = False
+    ) -> str | None:
+        """Find a session ID that matches the given working directory.
+
+        Args:
+            target_path: The target directory path
+            subdirectory_ok: If True, match sessions in subdirectories of target_path
+        """
         return None
 
     def get_shell_name(self) -> str | None:

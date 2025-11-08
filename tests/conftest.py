@@ -66,7 +66,9 @@ class FakeTerminal:
     def list_sessions(self) -> list[dict[str, str]]:
         return [{"session_id": "session1", "working_directory": "/home/user"}]
 
-    def find_session_by_working_directory(self, path: str) -> str | None:
+    def find_session_by_working_directory(
+        self, path: str, subdirectory_ok: bool = False
+    ) -> str | None:
         return "session1"
 
 
@@ -90,6 +92,7 @@ def mock_args():
             "paste_and_run_fish": None,
             "paste_and_run_powershell": None,
             "paste_and_run_nushell": None,
+            "subdirectory_ok": False,
         }
         defaults.update(kwargs)
         return argparse.Namespace(**defaults)
