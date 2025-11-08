@@ -1,0 +1,132 @@
+# automate-terminal
+
+Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, and Ghostty on macOS, with additional terminals and OSes added by request.
+
+automate-terminal is a best-effort project. Some terminals do not support automation at all!
+
+## Installation
+
+```bash
+pip install automate-terminal
+```
+
+```bash
+mise install pip:automate-terminal"
+```
+
+Or install from source:
+
+```bash
+git clone https://github.com/yourusername/automate-terminal.git
+cd automate-terminal
+pip install -e .
+```
+
+## Supported Terminals
+
+- **iTerm2** - Full support (session management, tabs, windows)
+- **Terminal.app** - Full support (session management, tabs, windows)
+- **Ghostty** - Basic support (tabs, windows; no session management)
+
+Other terminals are not supported and will error cleanly.
+
+## Quick Start
+
+```bash
+# Check if your terminal is supported
+automate-terminal check
+
+# Create a new tab
+automate-terminal new-tab --with-working-directory=/path/to/project
+
+# Switch to existing session by directory
+automate-terminal switch-to --with-working-directory=/path/to/project
+
+# Create new window with initialization script
+automate-terminal new-window \
+  --with-working-directory=/path/to/project \
+  --paste-and-run="source .env && npm run dev"
+```
+
+## Commands
+
+### check
+
+Detect terminal capabilities.
+
+```bash
+automate-terminal check
+automate-terminal check --output=json
+```
+
+### switch-to
+
+Switch to existing session. Errors if not found.
+
+```bash
+# By working directory
+automate-terminal switch-to --with-working-directory=/path/to/dir
+
+# By session ID
+automate-terminal switch-to --with-session-id=w0t0p2:ABC123
+
+# Both (session ID takes precedence)
+automate-terminal switch-to \
+  --with-session-id=w0t0p2:ABC123 \
+  --with-working-directory=/path/to/dir
+```
+
+### new-tab
+
+Create new tab.
+
+```bash
+automate-terminal new-tab --with-working-directory=/path/to/dir
+```
+
+### new-window
+
+Create new window.
+
+```bash
+automate-terminal new-window --with-working-directory=/path/to/dir
+```
+
+### list-sessions
+
+List all sessions (iTerm2 only).
+
+```bash
+automate-terminal list-sessions
+automate-terminal list-sessions --output=json
+```
+
+## Options
+
+### Output Format
+
+- `--output=text` - Human-readable (default)
+- `--output=json` - JSON for programmatic use
+- `--output=none` - Silent
+
+### Paste and Run
+
+Execute commands after creating/switching sessions.
+
+```bash
+--paste-and-run="echo 'I run unconditionally'"
+--paste-and-run-bash="echo 'I only run if the current shell is bash'"
+--paste-and-run-zsh="echo 'I only run if the current shell is zsh'"
+--paste-and-run-fish="echo 'I only run if the current shell is fish'"
+```
+
+Shell-specific flags override generic `--paste-and-run` when detected shell matches.
+
+### Debug and Dry Run
+
+```bash
+--debug     # Enable debug logging to stderr
+--dry-run   # Log actions instead of executing them
+```
+
+Use `--dry-run` to see what AppleScript commands would be executed without actually running them. Useful for debugging and understanding what the tool will do.

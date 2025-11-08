@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "automate-terminal"
+version = "0.1.0"
+description = "Automate opening of new tabs and windows in terminal programs"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    {name = "Steve", email = "steve@stevelandey.com"},
+]
+keywords = ["terminal"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: MacOS",
+    "Topic :: System :: Shells",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+automate-terminal = "automate_terminal.cli:main"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+# Enforce that imports are at the top of files
+extend-select = ["E402", "PLC0415"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+norecursedirs = ["scratch"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "ruff>=0.12.3",
+    "pytest-cov>=6.2.1",
+    "pre-commit>=3.0.0",
+]
