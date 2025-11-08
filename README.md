@@ -24,15 +24,13 @@ pip install -e .
 
 ## Supported Terminals
 
-| Terminal     | Create Tabs | Create Windows | Detect Session ID | Switch to Session | List Sessions | Paste Commands |
-|--------------|-------------|----------------|-------------------|-------------------|---------------|----------------|
-| iTerm2       | ✅          | ✅             | ✅                | ✅                | ✅            | ✅             |
-| Terminal.app | ✅          | ✅             | ✅*               | ✅                | ❌            | ✅             |
-| Ghostty      | ✅          | ✅             | ❌                | ❌                | ❌            | ✅             |
+| Terminal     | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands |
+|--------------|------------------|--------------|----------------------|---------------|----------------|
+| iTerm2       | ✅               | ✅           | ✅                   | ✅            | ✅             |
+| Terminal.app | ✅               | ❌           | ✅                   | ❌            | ✅             |
+| Ghostty      | ✅               | ❌           | ❌                   | ❌            | ✅             |
 
-\* Terminal.app uses working directory as session identifier (no native session ID support)
-
-Other terminals are not supported and will error cleanly.
+Other terminals are not supported; `automate-terminal` will exit with an error code in other terminals.
 
 ## Quick Start
 
