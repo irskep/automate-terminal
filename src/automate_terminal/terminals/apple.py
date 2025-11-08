@@ -305,6 +305,49 @@ class TerminalAppTerminal(BaseTerminal):
 
         return self.applescript.execute(applescript)
 
+    def list_sessions(self) -> list[dict[str, str]]:
+        """List all Terminal.app sessions with their working directories."""
+        applescript = """
+        tell application "Terminal"
+            set sessionData to ""
+            repeat with theWindow in windows
+                repeat with theTab in tabs of theWindow
+                    try
+                        set tabTTY to tty of theTab
+                        set shellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|sh)' | head -1 | awk '{print $2}'"
+                        set shellPid to do shell script shellCmd
+                        if shellPid is not "" then
+                            set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{print $9}'"
+                            set workingDir to do shell script cwdCmd
+                            if sessionData is not "" then
+                                set sessionData to sessionData & return
+                            end if
+                            set sessionData to sessionData & workingDir
+                        end if
+                    end try
+                end repeat
+            end repeat
+            return sessionData
+        end tell
+        """
+
+        output = self.applescript.execute_with_result(applescript)
+        if not output:
+            return []
+
+        sessions = []
+        for line in output.split("\n"):
+            line = line.strip()
+            if line:
+                sessions.append(
+                    {
+                        "session_id": line,
+                        "working_directory": line,
+                    }
+                )
+
+        return sessions
+
     def _can_create_tabs(self) -> bool:
         return True
 
@@ -312,7 +355,7 @@ class TerminalAppTerminal(BaseTerminal):
         return True
 
     def _can_list_sessions(self) -> bool:
-        return False  # Terminal.app doesn't easily list all sessions
+        return True
 
     def _can_switch_to_session(self) -> bool:
         return True

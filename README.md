@@ -27,7 +27,7 @@ pip install -e .
 | Terminal     | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands |
 |--------------|------------------|--------------|----------------------|---------------|----------------|
 | iTerm2       | ✅               | ✅           | ✅                   | ✅            | ✅             |
-| Terminal.app | ✅               | ❌           | ✅                   | ❌            | ✅             |
+| Terminal.app | ✅               | ❌           | ✅                   | ✅            | ✅             |
 | Ghostty      | ✅               | ❌           | ❌                   | ❌            | ✅             |
 
 Other terminals are not supported; `automate-terminal` will exit with an error code in other terminals.
@@ -96,7 +96,7 @@ automate-terminal new-window --with-working-directory=/path/to/dir
 
 ### list-sessions
 
-List all sessions (iTerm2 only).
+List all sessions.
 
 ```bash
 automate-terminal list-sessions
