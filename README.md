@@ -39,14 +39,13 @@ Other terminals are not supported; `automate-terminal` will exit with an error c
 automate-terminal check
 
 # Create a new tab
-automate-terminal new-tab --with-working-directory=/path/to/project
+automate-terminal new-tab /path/to/project
 
 # Switch to existing session by directory
-automate-terminal switch-to --with-working-directory=/path/to/project
+automate-terminal switch-to --working-directory=/path/to/project
 
 # Create new window with initialization script
-automate-terminal new-window \
-  --with-working-directory=/path/to/project \
+automate-terminal new-window /path/to/project \
   --paste-and-run="source .env && npm run dev"
 ```
 
@@ -66,16 +65,19 @@ automate-terminal check --output=json
 Switch to existing session. Errors if not found.
 
 ```bash
-# By working directory
-automate-terminal switch-to --with-working-directory=/path/to/dir
+# By working directory (or use --wd alias)
+automate-terminal switch-to --working-directory=/path/to/dir
 
-# By session ID
-automate-terminal switch-to --with-session-id=w0t0p2:ABC123
+# By session ID (or use --id alias)
+automate-terminal switch-to --session-id=w0t0p2:ABC123
 
 # Both (session ID takes precedence)
 automate-terminal switch-to \
-  --with-session-id=w0t0p2:ABC123 \
-  --with-working-directory=/path/to/dir
+  --session-id=w0t0p2:ABC123 \
+  --working-directory=/path/to/dir
+
+# Match sessions in subdirectories
+automate-terminal switch-to --working-directory=/path/to/dir --subdirectory-ok
 ```
 
 ### new-tab
@@ -83,7 +85,7 @@ automate-terminal switch-to \
 Create new tab.
 
 ```bash
-automate-terminal new-tab --with-working-directory=/path/to/dir
+automate-terminal new-tab /path/to/dir
 ```
 
 ### new-window
@@ -91,7 +93,7 @@ automate-terminal new-tab --with-working-directory=/path/to/dir
 Create new window.
 
 ```bash
-automate-terminal new-window --with-working-directory=/path/to/dir
+automate-terminal new-window /path/to/dir
 ```
 
 ### list-sessions

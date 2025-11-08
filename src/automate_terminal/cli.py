@@ -165,14 +165,14 @@ def cmd_switch_to(args):
     if not service:
         return 1
 
-    session_id = args.with_session_id
+    session_id = args.session_id
     working_directory = (
-        Path(args.with_working_directory) if args.with_working_directory else None
+        Path(args.working_directory) if args.working_directory else None
     )
 
     if not session_id and not working_directory:
         output_error(
-            "Must provide --with-session-id or --with-working-directory", args.output
+            "Must provide --session-id or --working-directory", args.output
         )
         return 1
 
@@ -375,9 +375,11 @@ def main():
     )
     add_common_args(switch_parser)
     add_paste_args(switch_parser)
-    switch_parser.add_argument("--with-session-id", help="Target session ID")
     switch_parser.add_argument(
-        "--with-working-directory", help="Target working directory"
+        "--session-id", "--id", dest="session_id", help="Target session ID"
+    )
+    switch_parser.add_argument(
+        "--working-directory", "--wd", dest="working_directory", help="Target working directory"
     )
     switch_parser.add_argument(
         "--subdirectory-ok",

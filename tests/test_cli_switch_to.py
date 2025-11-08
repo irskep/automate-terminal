@@ -18,8 +18,8 @@ def test_switch_to_success(mock_args, capsys):
 
         args = mock_args(
             output="json",
-            with_session_id="session123",
-            with_working_directory=None,
+            session_id="session123",
+            working_directory=None,
             paste_and_run=None,
         )
         result = cmd_switch_to(args)
@@ -40,8 +40,8 @@ def test_switch_to_no_session_found(mock_args, capsys):
 
         args = mock_args(
             output="json",
-            with_session_id="nonexistent",
-            with_working_directory=None,
+            session_id="nonexistent",
+            working_directory=None,
             paste_and_run=None,
         )
         result = cmd_switch_to(args)
@@ -60,8 +60,8 @@ def test_switch_to_missing_args(mock_args, capsys):
 
         args = mock_args(
             output="text",
-            with_session_id=None,
-            with_working_directory=None,
+            session_id=None,
+            working_directory=None,
         )
         result = cmd_switch_to(args)
 
@@ -80,8 +80,8 @@ def test_switch_to_calls_service_with_session_id(mock_args):
         mock_service.return_value = mock_instance
 
         args = mock_args(
-            with_session_id="test-session",
-            with_working_directory=None,
+            session_id="test-session",
+            working_directory=None,
             paste_and_run=None,
         )
         cmd_switch_to(args)
@@ -101,8 +101,8 @@ def test_switch_to_calls_service_with_working_directory(mock_args):
         mock_service.return_value = mock_instance
 
         args = mock_args(
-            with_session_id=None,
-            with_working_directory="/tmp/test",
+            session_id=None,
+            working_directory="/tmp/test",
             paste_and_run=None,
         )
         cmd_switch_to(args)
@@ -122,8 +122,8 @@ def test_switch_to_passes_subdirectory_ok_flag(mock_args):
         mock_service.return_value = mock_instance
 
         args = mock_args(
-            with_session_id=None,
-            with_working_directory="/tmp/test",
+            session_id=None,
+            working_directory="/tmp/test",
             paste_and_run=None,
             subdirectory_ok=True,
         )
@@ -144,8 +144,8 @@ def test_switch_to_error_message_with_subdirectories(mock_args, capsys):
 
         args = mock_args(
             output="text",
-            with_session_id=None,
-            with_working_directory="/tmp/test",
+            session_id=None,
+            working_directory="/tmp/test",
             paste_and_run=None,
             subdirectory_ok=False,
         )
@@ -168,8 +168,8 @@ def test_switch_to_error_message_without_subdirectories(mock_args, capsys):
 
         args = mock_args(
             output="text",
-            with_session_id=None,
-            with_working_directory="/tmp/test",
+            session_id=None,
+            working_directory="/tmp/test",
             paste_and_run=None,
             subdirectory_ok=False,
         )
