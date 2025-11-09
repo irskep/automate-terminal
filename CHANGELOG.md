@@ -6,6 +6,16 @@
 
 ### Added
 
+- WezTerm terminal support
+  - Full support for all capabilities: create tabs/windows, switch by ID or directory, list sessions, paste commands, run in active session
+  - Uses `$WEZTERM_PANE` for session identification
+  - Works cross-platform (macOS, Linux, BSD, Windows)
+- Kitty terminal support
+  - Full support for all capabilities: create tabs/windows, switch by ID or directory, list sessions, paste commands, run in active session
+  - Uses `$KITTY_WINDOW_ID` for session identification
+  - Works cross-platform (macOS, Linux, BSD)
+  - Requires `allow_remote_control yes` in `kitty.conf`
+
 ### Changed
 
 ### Fixed

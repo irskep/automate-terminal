@@ -12,8 +12,10 @@ from automate_terminal.terminals.apple import TerminalAppTerminal
 from automate_terminal.terminals.base import BaseTerminal
 from automate_terminal.terminals.ghostty import GhosttyMacTerminal
 from automate_terminal.terminals.iterm2 import ITerm2Terminal
+from automate_terminal.terminals.kitty import KittyTerminal
 from automate_terminal.terminals.tmux import TmuxTerminal
 from automate_terminal.terminals.vscode import VSCodeTerminal
+from automate_terminal.terminals.wezterm import WeztermTerminal
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +51,8 @@ def create_terminal_implementation(
             "terminal.app": TerminalAppTerminal(applescript_service, command_service),
             "ghostty": GhosttyMacTerminal(applescript_service, command_service),
             "tmux": TmuxTerminal(applescript_service, command_service),
+            "wezterm": WeztermTerminal(applescript_service, command_service),
+            "kitty": KittyTerminal(applescript_service, command_service),
             "vscode": VSCodeTerminal(
                 applescript_service, command_service, variant="vscode"
             ),
@@ -68,6 +72,8 @@ def create_terminal_implementation(
     # Cursor before VSCode since it's more specific (both use TERM_PROGRAM=vscode)
     terminals = [
         TmuxTerminal(applescript_service, command_service),
+        WeztermTerminal(applescript_service, command_service),
+        KittyTerminal(applescript_service, command_service),
         ITerm2Terminal(applescript_service, command_service),
         TerminalAppTerminal(applescript_service, command_service),
         GhosttyMacTerminal(applescript_service, command_service),
