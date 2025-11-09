@@ -1,10 +1,8 @@
 # automate-terminal
 
-Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, Ghostty, tmux, Cursor, and Visual Studio Code.
+Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, Ghostty, tmux, WezTerm, Kitty, Cursor, and Visual Studio Code.
 
-Most terminals are macOS-only, but tmux works cross-platform (macOS, Linux, BSD, etc.) and has full feature support.
-
-automate-terminal is a best-effort project. Some terminals do not support automation at all! It's also intended to be used as a component in other tools, so it errs on the side of strictness over fallbacks. See command reference for details.
+automate-terminal is a best-effort project. Some terminals do not support automation at all! It's also intended to be used as a component in other tools, so it errs on the side of strictness over fallbacks. See the command reference for specifics.
 
 ## Installation
 
@@ -24,10 +22,12 @@ mise install pip:automate-terminal
 | Terminal.app | macOS          | ✅               | ❌           | ✅                    | ✅            | ✅             | ✅                    |
 | Ghostty      | macOS          | ✅               | ❌           | ❌                    | ❌            | ✅             | ✅                    |
 | tmux         | Cross-platform | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
+| WezTerm      | Cross-platform | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
+| Kitty        | Cross-platform | ✅\*             | ✅\*         | ✅\*                  | ✅\*          | ✅\*           | ✅\*                  |
 | VSCode       | Cross-platform | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
 | Cursor       | Cross-platform | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
 
-**Linux/BSD users:** Use tmux for full automation support on non-macOS platforms.
+\* **Kitty requires `allow_remote_control yes` in `kitty.conf`** to enable automation features.
 
 Other terminals are not supported; `automate-terminal` will exit with an error code in unsupported terminals.
 
@@ -61,7 +61,7 @@ The scope of automation covered by `automate-terminal` is "create or navigate to
 
 ### What is a terminal emulator?
 
-A terminal emulator, for the purposes of this project, is the thing you type your terminal commands into. For the author, it's iTerm2. For many people, it's the built-in terminal in Visual Studio Code. For hipsters, it's Ghostty. Linux users have, I dunno, Alacritty or something. And there's WezTerm, and the built-in terminals for macOS and Windows. Every few years, somebody spins up a new one.
+A terminal emulator, for the purposes of this project, is the thing you type your terminal commands into. For the author, it's iTerm2. For many people, it's the built-in terminal in Visual Studio Code. For hipsters, it's Ghostty. Linux users have more options than I know of, including KConsole. And there's WezTerm, and the built-in terminals for macOS and Windows. Every few years, somebody spins up a new one.
 
 Within terminal emulators, a _session_ is, for the purposes of this project, one specific terminal running a shell. Your sessions might be organized in windows, or tabs, or splits within a window or tab.
 
@@ -73,7 +73,11 @@ macOS terminals are primarily controlled via AppleScript. iTerm2, for example, h
 
 **tmux** uses its native CLI commands (`tmux list-panes`, `tmux select-window`, `tmux send-keys`, etc.) and works identically across all platforms where tmux is available.
 
-All this is to say, if you are unhappy with the level of automation provided by `automate-terminal` on macOS, switch to iTerm2 or lobby your terminal emulator authors to add AppleScript support. **On Linux/BSD, use tmux for full automation support.**
+**WezTerm** uses its native CLI commands (`wezterm cli list`, `wezterm cli activate-pane`, `wezterm cli send-text`, etc.) and works identically across all platforms where WezTerm is available (macOS, Linux, BSD, Windows).
+
+**Kitty** uses its remote control protocol (`kitten @ ls`, `kitten @ focus-window`, `kitten @ send-text`, etc.) and works across macOS, Linux, and BSD. **Note: Kitty requires `allow_remote_control yes` in your `kitty.conf` file to enable automation.**
+
+All this is to say, if you are unhappy with the level of automation provided by `automate-terminal` on macOS, switch to another terminal emulator, or lobby the authors of your favorite one to add automation support.
 
 ## Commands
 
@@ -212,7 +216,7 @@ Shell-specific flags override generic `--paste-and-run` when detected shell matc
 
 Use `--dry-run` to see what commands would be executed without actually running them (AppleScript for macOS terminals, tmux CLI commands for tmux). Useful for debugging and understanding what the tool will do.
 
-### Python API
+## Python API
 
 ```python
 from automate_terminal import (

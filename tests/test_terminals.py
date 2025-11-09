@@ -5,8 +5,10 @@ import pytest
 from automate_terminal.terminals.apple import TerminalAppTerminal
 from automate_terminal.terminals.ghostty import GhosttyMacTerminal
 from automate_terminal.terminals.iterm2 import ITerm2Terminal
+from automate_terminal.terminals.kitty import KittyTerminal
 from automate_terminal.terminals.tmux import TmuxTerminal
 from automate_terminal.terminals.vscode import VSCodeTerminal
+from automate_terminal.terminals.wezterm import WeztermTerminal
 
 
 @pytest.mark.parametrize(
@@ -47,6 +49,39 @@ def test_tmux_terminal_detect(fake_applescript, fake_command, monkeypatch):
 
     # tmux is not detected when TMUX env var is not set
     monkeypatch.delenv("TMUX", raising=False)
+    assert terminal.detect(None, "Darwin") is False
+    assert terminal.detect(None, "Linux") is False
+
+
+def test_wezterm_terminal_detect(fake_applescript, fake_command, monkeypatch):
+    """Test WezTerm detection based on WEZTERM_PANE environment variable."""
+    terminal = WeztermTerminal(fake_applescript, fake_command)
+
+    # WezTerm is detected when WEZTERM_PANE env var is set
+    monkeypatch.setenv("WEZTERM_PANE", "0")
+    assert terminal.detect(None, "Darwin") is True
+    assert terminal.detect(None, "Linux") is True
+    assert terminal.detect(None, "Windows") is True
+    assert terminal.detect("iTerm.app", "Darwin") is True  # Can be nested
+
+    # WezTerm is not detected when WEZTERM_PANE env var is not set
+    monkeypatch.delenv("WEZTERM_PANE", raising=False)
+    assert terminal.detect(None, "Darwin") is False
+    assert terminal.detect(None, "Linux") is False
+
+
+def test_kitty_terminal_detect(fake_applescript, fake_command, monkeypatch):
+    """Test Kitty detection based on KITTY_WINDOW_ID environment variable."""
+    terminal = KittyTerminal(fake_applescript, fake_command)
+
+    # Kitty is detected when KITTY_WINDOW_ID env var is set
+    monkeypatch.setenv("KITTY_WINDOW_ID", "1")
+    assert terminal.detect(None, "Darwin") is True
+    assert terminal.detect(None, "Linux") is True
+    assert terminal.detect("iTerm.app", "Darwin") is True  # Can be nested
+
+    # Kitty is not detected when KITTY_WINDOW_ID env var is not set
+    monkeypatch.delenv("KITTY_WINDOW_ID", raising=False)
     assert terminal.detect(None, "Darwin") is False
     assert terminal.detect(None, "Linux") is False
 
@@ -115,6 +150,36 @@ def test_vscode_terminal_capabilities(fake_applescript, fake_command):
 def test_tmux_terminal_capabilities(fake_applescript, fake_command):
     """Test that tmux terminal reports correct capabilities."""
     terminal = TmuxTerminal(fake_applescript, fake_command)
+    caps = terminal.get_capabilities()
+
+    assert caps.can_create_tabs is True
+    assert caps.can_create_windows is True
+    assert caps.can_list_sessions is True
+    assert caps.can_switch_to_session is True
+    assert caps.can_detect_session_id is True
+    assert caps.can_detect_working_directory is True
+    assert caps.can_paste_commands is True
+    assert caps.can_run_in_active_session is True
+
+
+def test_wezterm_terminal_capabilities(fake_applescript, fake_command):
+    """Test that WezTerm terminal reports correct capabilities."""
+    terminal = WeztermTerminal(fake_applescript, fake_command)
+    caps = terminal.get_capabilities()
+
+    assert caps.can_create_tabs is True
+    assert caps.can_create_windows is True
+    assert caps.can_list_sessions is True
+    assert caps.can_switch_to_session is True
+    assert caps.can_detect_session_id is True
+    assert caps.can_detect_working_directory is True
+    assert caps.can_paste_commands is True
+    assert caps.can_run_in_active_session is True
+
+
+def test_kitty_terminal_capabilities(fake_applescript, fake_command):
+    """Test that Kitty terminal reports correct capabilities."""
+    terminal = KittyTerminal(fake_applescript, fake_command)
     caps = terminal.get_capabilities()
 
     assert caps.can_create_tabs is True
