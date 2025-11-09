@@ -5,6 +5,7 @@ import pytest
 from automate_terminal.terminals.apple import TerminalAppTerminal
 from automate_terminal.terminals.ghostty import GhosttyMacTerminal
 from automate_terminal.terminals.iterm2 import ITerm2Terminal
+from automate_terminal.terminals.tmux import TmuxTerminal
 from automate_terminal.terminals.vscode import VSCodeTerminal
 
 
@@ -32,6 +33,22 @@ def test_terminal_detect(
     """Test terminal detection based on TERM_PROGRAM and platform."""
     terminal = terminal_cls(fake_applescript)
     assert terminal.detect(term_program, platform) == expected
+
+
+def test_tmux_terminal_detect(fake_applescript, monkeypatch):
+    """Test tmux detection based on TMUX environment variable."""
+    terminal = TmuxTerminal(fake_applescript)
+
+    # tmux is detected when TMUX env var is set
+    monkeypatch.setenv("TMUX", "/tmp/tmux-501/default,12345,0")
+    assert terminal.detect(None, "Darwin") is True
+    assert terminal.detect(None, "Linux") is True
+    assert terminal.detect("iTerm.app", "Darwin") is True  # Can be nested
+
+    # tmux is not detected when TMUX env var is not set
+    monkeypatch.delenv("TMUX", raising=False)
+    assert terminal.detect(None, "Darwin") is False
+    assert terminal.detect(None, "Linux") is False
 
 
 @pytest.mark.parametrize(
@@ -93,3 +110,18 @@ def test_vscode_terminal_capabilities(fake_applescript, fake_command):
     assert caps.can_switch_to_session is True  # CLI works everywhere
     assert caps.can_detect_session_id is False
     assert caps.can_paste_commands is False
+
+
+def test_tmux_terminal_capabilities(fake_applescript):
+    """Test that tmux terminal reports correct capabilities."""
+    terminal = TmuxTerminal(fake_applescript)
+    caps = terminal.get_capabilities()
+
+    assert caps.can_create_tabs is True
+    assert caps.can_create_windows is True
+    assert caps.can_list_sessions is True
+    assert caps.can_switch_to_session is True
+    assert caps.can_detect_session_id is True
+    assert caps.can_detect_working_directory is True
+    assert caps.can_paste_commands is True
+    assert caps.can_run_in_active_session is True

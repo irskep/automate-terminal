@@ -12,6 +12,7 @@ from automate_terminal.terminals.apple import TerminalAppTerminal
 from automate_terminal.terminals.base import BaseTerminal
 from automate_terminal.terminals.ghostty import GhosttyMacTerminal
 from automate_terminal.terminals.iterm2 import ITerm2Terminal
+from automate_terminal.terminals.tmux import TmuxTerminal
 from automate_terminal.terminals.vscode import VSCodeTerminal
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,7 @@ def create_terminal_implementation(
             "terminal": TerminalAppTerminal(applescript_service),
             "terminal.app": TerminalAppTerminal(applescript_service),
             "ghostty": GhosttyMacTerminal(applescript_service),
+            "tmux": TmuxTerminal(applescript_service),
             "vscode": VSCodeTerminal(
                 applescript_service, command_service, variant="vscode"
             ),
@@ -61,8 +63,10 @@ def create_terminal_implementation(
             logger.warning(f"Unknown AUTOMATE_TERMINAL_OVERRIDE value: {override}")
 
     # Ordered list of terminal implementations to try
+    # tmux first since it can be running inside any other terminal
     # Cursor before VSCode since it's more specific (both use TERM_PROGRAM=vscode)
     terminals = [
+        TmuxTerminal(applescript_service),
         ITerm2Terminal(applescript_service),
         TerminalAppTerminal(applescript_service),
         GhosttyMacTerminal(applescript_service),
@@ -244,6 +248,8 @@ class TerminalService:
             True if command was sent successfully, False otherwise
         """
         if not self.terminal.get_capabilities().can_run_in_active_session:
-            raise RuntimeError("Terminal does not support running commands in active session")
+            raise RuntimeError(
+                "Terminal does not support running commands in active session"
+            )
 
         return self.terminal.run_in_active_session(command)

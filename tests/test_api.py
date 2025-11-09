@@ -23,6 +23,7 @@ def mock_terminal_service():
             can_detect_session_id=True,
             can_detect_working_directory=True,
             can_paste_commands=True,
+            can_run_in_active_session=True,
         ),
     }
     mock.new_tab.return_value = True
@@ -38,7 +39,10 @@ def mock_terminal_service():
 
 def test_check(mock_terminal_service):
     """Test check() delegates to TerminalService.check()."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.check()
 
     assert result["terminal"] == "iTerm2"
@@ -48,7 +52,10 @@ def test_check(mock_terminal_service):
 
 def test_check_with_debug_and_dry_run(mock_terminal_service):
     """Test check() passes debug and dry_run to service creation."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service) as mock_get:
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ) as mock_get:
         api.check(debug=True, dry_run=True)
 
     mock_get.assert_called_once_with(dry_run=True, debug=True)
@@ -56,7 +63,10 @@ def test_check_with_debug_and_dry_run(mock_terminal_service):
 
 def test_new_tab_with_path_string(mock_terminal_service):
     """Test new_tab() with string path."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.new_tab("/path/to/project")
 
     assert result is True
@@ -69,7 +79,10 @@ def test_new_tab_with_path_string(mock_terminal_service):
 def test_new_tab_with_path_object(mock_terminal_service):
     """Test new_tab() with Path object."""
     working_dir = Path("/path/to/project")
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.new_tab(working_dir)
 
     assert result is True
@@ -80,7 +93,10 @@ def test_new_tab_with_path_object(mock_terminal_service):
 
 def test_new_tab_with_paste_script(mock_terminal_service):
     """Test new_tab() with paste script."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.new_tab("/path/to/project", paste_script="npm start")
 
     assert result is True
@@ -91,7 +107,10 @@ def test_new_tab_with_paste_script(mock_terminal_service):
 
 def test_new_window_with_path_string(mock_terminal_service):
     """Test new_window() with string path."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.new_window("/path/to/project")
 
     assert result is True
@@ -103,8 +122,13 @@ def test_new_window_with_path_string(mock_terminal_service):
 
 def test_new_window_with_paste_script(mock_terminal_service):
     """Test new_window() with paste script."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
-        result = api.new_window("/path/to/project", paste_script="source venv/bin/activate")
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
+        result = api.new_window(
+            "/path/to/project", paste_script="source venv/bin/activate"
+        )
 
     assert result is True
     mock_terminal_service.new_window.assert_called_once()
@@ -114,7 +138,10 @@ def test_new_window_with_paste_script(mock_terminal_service):
 
 def test_switch_to_session_by_id(mock_terminal_service):
     """Test switch_to_session() with session ID."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.switch_to_session(session_id="session-123")
 
     assert result is True
@@ -126,7 +153,10 @@ def test_switch_to_session_by_id(mock_terminal_service):
 
 def test_switch_to_session_by_working_directory(mock_terminal_service):
     """Test switch_to_session() with working directory."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.switch_to_session(working_directory="/path/to/project")
 
     assert result is True
@@ -138,10 +168,12 @@ def test_switch_to_session_by_working_directory(mock_terminal_service):
 
 def test_switch_to_session_with_paste_script(mock_terminal_service):
     """Test switch_to_session() with paste script."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.switch_to_session(
-            working_directory="/path/to/project",
-            paste_script="git status"
+            working_directory="/path/to/project", paste_script="git status"
         )
 
     assert result is True
@@ -152,10 +184,12 @@ def test_switch_to_session_with_paste_script(mock_terminal_service):
 
 def test_switch_to_session_with_subdirectory_ok(mock_terminal_service):
     """Test switch_to_session() with subdirectory_ok flag."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.switch_to_session(
-            working_directory="/path/to/project",
-            subdirectory_ok=True
+            working_directory="/path/to/project", subdirectory_ok=True
         )
 
     assert result is True
@@ -166,7 +200,10 @@ def test_switch_to_session_with_subdirectory_ok(mock_terminal_service):
 
 def test_list_sessions(mock_terminal_service):
     """Test list_sessions() delegates to TerminalService."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.list_sessions()
 
     assert len(result) == 1
@@ -177,7 +214,10 @@ def test_list_sessions(mock_terminal_service):
 
 def test_get_current_session_id(mock_terminal_service):
     """Test get_current_session_id() delegates to TerminalService."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.get_current_session_id()
 
     assert result == "session-123"
@@ -187,7 +227,10 @@ def test_get_current_session_id(mock_terminal_service):
 def test_get_current_session_id_returns_none(mock_terminal_service):
     """Test get_current_session_id() returns None when service returns None."""
     mock_terminal_service.get_current_session_id.return_value = None
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.get_current_session_id()
 
     assert result is None
@@ -195,7 +238,10 @@ def test_get_current_session_id_returns_none(mock_terminal_service):
 
 def test_get_shell_name(mock_terminal_service):
     """Test get_shell_name() delegates to TerminalService."""
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.get_shell_name()
 
     assert result == "zsh"
@@ -205,7 +251,10 @@ def test_get_shell_name(mock_terminal_service):
 def test_get_shell_name_returns_none(mock_terminal_service):
     """Test get_shell_name() returns None when service returns None."""
     mock_terminal_service.get_shell_name.return_value = None
-    with patch("automate_terminal.api._get_terminal_service", return_value=mock_terminal_service):
+    with patch(
+        "automate_terminal.api._get_terminal_service",
+        return_value=mock_terminal_service,
+    ):
         result = api.get_shell_name()
 
     assert result is None
@@ -213,9 +262,10 @@ def test_get_shell_name_returns_none(mock_terminal_service):
 
 def test_get_terminal_service_creates_services():
     """Test _get_terminal_service creates AppleScriptService and TerminalService."""
-    with patch("automate_terminal.api.AppleScriptService") as mock_applescript_cls, \
-         patch("automate_terminal.api.TerminalService") as mock_terminal_cls:
-
+    with (
+        patch("automate_terminal.api.AppleScriptService") as mock_applescript_cls,
+        patch("automate_terminal.api.TerminalService") as mock_terminal_cls,
+    ):
         api._get_terminal_service(dry_run=True, debug=True)
 
     # Verify services were created with correct parameters
@@ -228,7 +278,10 @@ def test_api_functions_pass_debug_and_dry_run():
     with patch("automate_terminal.api._get_terminal_service") as mock_get:
         mock_service = MagicMock()
         mock_get.return_value = mock_service
-        mock_service.check.return_value = {"terminal": "test", "capabilities": MagicMock()}
+        mock_service.check.return_value = {
+            "terminal": "test",
+            "capabilities": MagicMock(),
+        }
 
         # Test each function with debug=True, dry_run=True
         api.check(debug=True, dry_run=True)
