@@ -14,14 +14,6 @@ pip install automate-terminal
 mise install pip:automate-terminal
 ```
 
-Or install from source:
-
-```bash
-git clone https://github.com/yourusername/automate-terminal.git
-cd automate-terminal
-pip install -e .
-```
-
 ## Supported Terminals
 
 | Terminal     | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands | Run in Active Session |
