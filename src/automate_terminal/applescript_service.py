@@ -4,7 +4,7 @@ import logging
 import platform
 from pathlib import Path
 
-from automate_terminal.utils import run_command
+from automate_terminal.utils import run_command_r
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class AppleScriptService:
             return True
 
         try:
-            result = run_command(
+            result = run_command_r(
                 ["osascript", "-e", script],
                 timeout=30,
                 description="Execute AppleScript",
@@ -78,7 +78,7 @@ class AppleScriptService:
             logger.debug(script)
 
         try:
-            result = run_command(
+            result = run_command_r(
                 ["osascript", "-e", script],
                 timeout=30,
                 description="Execute AppleScript for output",

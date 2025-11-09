@@ -4,7 +4,7 @@ import logging
 import shlex
 from pathlib import Path
 
-from automate_terminal.utils import run_command
+from automate_terminal.utils import run_command_r
 
 from .base import BaseTerminal
 
@@ -65,7 +65,7 @@ class TerminalAppTerminal(BaseTerminal):
         try:
             # Find shell process for this TTY
             shell_cmd = f"lsof {shlex.quote(tty)} | grep -E '(zsh|bash|sh)' | head -1 | awk '{{print $2}}'"
-            shell_result = run_command(
+            shell_result = run_command_r(
                 ["bash", "-c", shell_cmd],
                 timeout=5,
                 description=f"Find shell process for TTY {tty}",
@@ -78,7 +78,7 @@ class TerminalAppTerminal(BaseTerminal):
 
             # Get working directory of that process
             cwd_cmd = f"lsof -p {shlex.quote(pid)} | grep cwd | awk '{{print $9}}'"
-            cwd_result = run_command(
+            cwd_result = run_command_r(
                 ["bash", "-c", cwd_cmd],
                 timeout=5,
                 description=f"Get working directory for PID {pid}",
@@ -213,7 +213,7 @@ class TerminalAppTerminal(BaseTerminal):
         """
 
         try:
-            result = run_command(
+            result = run_command_r(
                 ["osascript", "-e", check_windows_script],
                 timeout=5,
                 description="Check Terminal windows",

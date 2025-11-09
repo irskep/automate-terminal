@@ -35,9 +35,9 @@ def test_terminal_detect(
     assert terminal.detect(term_program, platform) == expected
 
 
-def test_tmux_terminal_detect(fake_applescript, monkeypatch):
+def test_tmux_terminal_detect(fake_applescript, fake_command, monkeypatch):
     """Test tmux detection based on TMUX environment variable."""
-    terminal = TmuxTerminal(fake_applescript)
+    terminal = TmuxTerminal(fake_applescript, fake_command)
 
     # tmux is detected when TMUX env var is set
     monkeypatch.setenv("TMUX", "/tmp/tmux-501/default,12345,0")
@@ -112,9 +112,9 @@ def test_vscode_terminal_capabilities(fake_applescript, fake_command):
     assert caps.can_paste_commands is False
 
 
-def test_tmux_terminal_capabilities(fake_applescript):
+def test_tmux_terminal_capabilities(fake_applescript, fake_command):
     """Test that tmux terminal reports correct capabilities."""
-    terminal = TmuxTerminal(fake_applescript)
+    terminal = TmuxTerminal(fake_applescript, fake_command)
     caps = terminal.get_capabilities()
 
     assert caps.can_create_tabs is True

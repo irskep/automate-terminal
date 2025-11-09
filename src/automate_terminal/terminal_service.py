@@ -36,7 +36,8 @@ def create_terminal_implementation(
     applescript_service: AppleScriptService,
 ) -> BaseTerminal | None:
     """Create the appropriate terminal implementation."""
-    command_service = CommandService()
+    # Create command service with same dry_run setting as applescript service
+    command_service = CommandService(dry_run=applescript_service.dry_run)
 
     # Check for override environment variable
     override = os.getenv("AUTOMATE_TERMINAL_OVERRIDE")
@@ -47,7 +48,7 @@ def create_terminal_implementation(
             "terminal": TerminalAppTerminal(applescript_service),
             "terminal.app": TerminalAppTerminal(applescript_service),
             "ghostty": GhosttyMacTerminal(applescript_service),
-            "tmux": TmuxTerminal(applescript_service),
+            "tmux": TmuxTerminal(applescript_service, command_service),
             "vscode": VSCodeTerminal(
                 applescript_service, command_service, variant="vscode"
             ),
@@ -66,7 +67,7 @@ def create_terminal_implementation(
     # tmux first since it can be running inside any other terminal
     # Cursor before VSCode since it's more specific (both use TERM_PROGRAM=vscode)
     terminals = [
-        TmuxTerminal(applescript_service),
+        TmuxTerminal(applescript_service, command_service),
         ITerm2Terminal(applescript_service),
         TerminalAppTerminal(applescript_service),
         GhosttyMacTerminal(applescript_service),
