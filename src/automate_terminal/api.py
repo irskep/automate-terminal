@@ -19,11 +19,10 @@ Example usage:
 """
 
 from pathlib import Path
-from typing import Optional
 
 from .applescript_service import AppleScriptService
 from .models import Capabilities
-from .terminal_service import TerminalNotFoundError, TerminalService
+from .terminal_service import TerminalService
 
 
 def _get_terminal_service(dry_run: bool = False, debug: bool = False) -> TerminalService:
@@ -75,7 +74,7 @@ def check(dry_run: bool = False, debug: bool = False) -> dict[str, str | Capabil
 
 def new_tab(
     working_directory: Path | str,
-    paste_script: Optional[str] = None,
+    paste_script: str | None = None,
     dry_run: bool = False,
     debug: bool = False,
 ) -> bool:
@@ -105,7 +104,7 @@ def new_tab(
 
 def new_window(
     working_directory: Path | str,
-    paste_script: Optional[str] = None,
+    paste_script: str | None = None,
     dry_run: bool = False,
     debug: bool = False,
 ) -> bool:
@@ -134,9 +133,9 @@ def new_window(
 
 
 def switch_to_session(
-    session_id: Optional[str] = None,
-    working_directory: Optional[Path | str] = None,
-    paste_script: Optional[str] = None,
+    session_id: str | None = None,
+    working_directory: Path | str | None = None,
+    paste_script: str | None = None,
     subdirectory_ok: bool = False,
     dry_run: bool = False,
     debug: bool = False,
@@ -219,7 +218,7 @@ def list_sessions(
 def get_current_session_id(
     dry_run: bool = False,
     debug: bool = False,
-) -> Optional[str]:
+) -> str | None:
     """
     Get the current session ID.
 
@@ -242,7 +241,7 @@ def get_current_session_id(
 def get_shell_name(
     dry_run: bool = False,
     debug: bool = False,
-) -> Optional[str]:
+) -> str | None:
     """
     Get the name of the current shell.
 
