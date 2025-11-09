@@ -2,7 +2,7 @@
 
 Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, Ghostty, tmux, Cursor, and Visual Studio Code.
 
-Most terminals are macOS-only, but **tmux works cross-platform** (macOS, Linux, BSD, etc.) and has full feature support.
+Most terminals are macOS-only, but tmux works cross-platform (macOS, Linux, BSD, etc.) and has full feature support.
 
 automate-terminal is a best-effort project. Some terminals do not support automation at all! It's also intended to be used as a component in other tools, so it errs on the side of strictness over fallbacks. See command reference for details.
 
@@ -18,14 +18,14 @@ mise install pip:automate-terminal
 
 ## Supported Terminals
 
-| Terminal     | Platform           | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands | Run in Active Session |
-| ------------ | ------------------ | ---------------- | ------------ | --------------------- | ------------- | -------------- | --------------------- |
-| iTerm2       | macOS              | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
-| Terminal.app | macOS              | ✅               | ❌           | ✅                    | ✅            | ✅             | ✅                    |
-| Ghostty      | macOS              | ✅               | ❌           | ❌                    | ❌            | ✅             | ✅                    |
-| **tmux**     | **Cross-platform** | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
-| VSCode       | Cross-platform     | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
-| Cursor       | Cross-platform     | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
+| Terminal     | Platform       | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands | Run in Active Session |
+| ------------ | -------------- | ---------------- | ------------ | --------------------- | ------------- | -------------- | --------------------- |
+| iTerm2       | macOS          | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
+| Terminal.app | macOS          | ✅               | ❌           | ✅                    | ✅            | ✅             | ✅                    |
+| Ghostty      | macOS          | ✅               | ❌           | ❌                    | ❌            | ✅             | ✅                    |
+| tmux         | Cross-platform | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
+| VSCode       | Cross-platform | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
+| Cursor       | Cross-platform | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
 
 **Linux/BSD users:** Use tmux for full automation support on non-macOS platforms.
 
