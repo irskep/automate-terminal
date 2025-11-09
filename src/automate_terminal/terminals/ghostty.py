@@ -111,3 +111,21 @@ class GhosttyMacTerminal(BaseTerminal):
 
     def _can_paste_commands(self) -> bool:
         return True
+
+    def _can_run_in_active_session(self) -> bool:
+        return True
+
+    def run_in_active_session(self, command: str) -> bool:
+        """Run a command in the current active Ghostty session."""
+        logger.debug(f"Running command in active Ghostty session: {command}")
+
+        applescript = f"""
+        tell application "System Events"
+            tell process "Ghostty"
+                keystroke "{self.applescript.escape_string(command)}"
+                key code 36
+            end tell
+        end tell
+        """
+
+        return self.applescript.execute(applescript)

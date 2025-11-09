@@ -260,6 +260,33 @@ def get_shell_name(
     return service.get_shell_name()
 
 
+def run_in_active_session(
+    command: str,
+    dry_run: bool = False,
+    debug: bool = False,
+) -> bool:
+    """
+    Run a command in the current active terminal session.
+
+    Args:
+        command: Shell command to execute
+        dry_run: If True, don't actually execute commands
+        debug: If True, enable debug logging
+
+    Returns:
+        True if command was sent successfully, False otherwise
+
+    Raises:
+        RuntimeError: If the terminal doesn't support running commands in active session
+
+    Example:
+        >>> run_in_active_session("echo 'Hello from API'")
+        >>> run_in_active_session("git status")
+    """
+    service = _get_terminal_service(dry_run=dry_run, debug=debug)
+    return service.run_in_active_session(command)
+
+
 __all__ = [
     "check",
     "new_tab",
@@ -268,4 +295,5 @@ __all__ = [
     "list_sessions",
     "get_current_session_id",
     "get_shell_name",
+    "run_in_active_session",
 ]

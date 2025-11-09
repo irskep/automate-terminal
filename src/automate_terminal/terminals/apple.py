@@ -360,3 +360,18 @@ class TerminalAppTerminal(BaseTerminal):
 
     def _can_paste_commands(self) -> bool:
         return True
+
+    def _can_run_in_active_session(self) -> bool:
+        return True
+
+    def run_in_active_session(self, command: str) -> bool:
+        """Run a command in the current active Terminal.app session."""
+        logger.debug(f"Running command in active Terminal.app session: {command}")
+
+        applescript = f"""
+        tell application "Terminal"
+            do script "{self.applescript.escape_string(command)}" in selected tab of front window
+        end tell
+        """
+
+        return self.applescript.execute(applescript)

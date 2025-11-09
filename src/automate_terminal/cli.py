@@ -376,6 +376,39 @@ def cmd_list_sessions(args):
         return 1
 
 
+def cmd_run_in_active_session(args):
+    """Run command in active session."""
+    service = _get_terminal_service(args)
+    if not service:
+        return 1
+
+    command = args.script
+
+    try:
+        success = service.run_in_active_session(command)
+
+        if success:
+            data = {
+                "success": True,
+                "terminal": service.get_terminal_name(),
+                "command": command,
+            }
+
+            output(args.output, data, "Command sent to active session")
+            return 0
+        else:
+            output_error(
+                "Failed to run command in active session",
+                args.output,
+                terminal=service.get_terminal_name(),
+            )
+            return 1
+
+    except RuntimeError as e:
+        output_error(str(e), args.output)
+        return 1
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -469,6 +502,13 @@ def main():
     list_parser = subparsers.add_parser("list-sessions", help="List all sessions")
     add_common_args(list_parser)
 
+    # run-in-active-session command
+    run_parser = subparsers.add_parser(
+        "run-in-active-session", help="Run command in active session"
+    )
+    add_common_args(run_parser)
+    run_parser.add_argument("script", help="Command to run in active session")
+
     args = parser.parse_args()
 
     # Setup logging
@@ -488,6 +528,8 @@ def main():
         return cmd_new_window(args)
     elif args.command == "list-sessions":
         return cmd_list_sessions(args)
+    elif args.command == "run-in-active-session":
+        return cmd_run_in_active_session(args)
     else:
         parser.print_help()
         return 1

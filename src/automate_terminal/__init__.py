@@ -10,6 +10,7 @@ from .api import (
     list_sessions,
     new_tab,
     new_window,
+    run_in_active_session,
     switch_to_session,
 )
 
@@ -26,6 +27,7 @@ __all__ = [
     "list_sessions",
     "get_current_session_id",
     "get_shell_name",
+    "run_in_active_session",
     # Core classes and exceptions
     "Capabilities",
     "TerminalNotFoundError",

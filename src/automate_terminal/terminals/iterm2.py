@@ -257,3 +257,20 @@ class ITerm2Terminal(BaseTerminal):
 
     def _can_paste_commands(self) -> bool:
         return True
+
+    def _can_run_in_active_session(self) -> bool:
+        return True
+
+    def run_in_active_session(self, command: str) -> bool:
+        """Run a command in the current active iTerm2 session."""
+        logger.debug(f"Running command in active iTerm2 session: {command}")
+
+        applescript = f"""
+        tell application "iTerm2"
+            tell current session of current window
+                write text "{self.applescript.escape_string(command)}"
+            end tell
+        end tell
+        """
+
+        return self.applescript.execute(applescript)

@@ -14,3 +14,4 @@ class Capabilities:
     can_detect_session_id: bool
     can_detect_working_directory: bool
     can_paste_commands: bool
+    can_run_in_active_session: bool

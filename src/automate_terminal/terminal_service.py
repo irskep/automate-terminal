@@ -25,6 +25,7 @@ EMPTY_CAPABILITIES = Capabilities(
     can_detect_session_id=False,
     can_detect_working_directory=True,
     can_paste_commands=False,
+    can_run_in_active_session=False,
 )
 
 
@@ -232,3 +233,17 @@ class TerminalService:
                 }
 
         return None
+
+    def run_in_active_session(self, command: str) -> bool:
+        """Run a command in the current active terminal session.
+
+        Args:
+            command: Shell command to execute
+
+        Returns:
+            True if command was sent successfully, False otherwise
+        """
+        if not self.terminal.get_capabilities().can_run_in_active_session:
+            raise RuntimeError("Terminal does not support running commands in active session")
+
+        return self.terminal.run_in_active_session(command)

@@ -112,6 +112,7 @@ class BaseTerminal(ABC):
             can_detect_session_id=self._can_detect_session_id(),
             can_detect_working_directory=self._can_detect_working_directory(),
             can_paste_commands=self._can_paste_commands(),
+            can_run_in_active_session=self._can_run_in_active_session(),
         )
 
     def _can_create_tabs(self) -> bool:
@@ -153,5 +154,20 @@ class BaseTerminal(ABC):
         even if find_session_by_working_directory returns None.
 
         Default: False (requires session detection before switching)
+        """
+        return False
+
+    def _can_run_in_active_session(self) -> bool:
+        """Override in subclass to indicate run in active session support."""
+        return False
+
+    def run_in_active_session(self, command: str) -> bool:
+        """Run a command in the current active terminal session.
+
+        Args:
+            command: Shell command to execute
+
+        Returns:
+            True if command was sent successfully, False otherwise
         """
         return False

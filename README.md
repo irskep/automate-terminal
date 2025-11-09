@@ -24,13 +24,13 @@ pip install -e .
 
 ## Supported Terminals
 
-| Terminal     | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands |
-| ------------ | ---------------- | ------------ | --------------------- | ------------- | -------------- |
-| iTerm2       | ✅               | ✅           | ✅                    | ✅            | ✅             |
-| Terminal.app | ✅               | ❌           | ✅                    | ✅            | ✅             |
-| Ghostty      | ✅               | ❌           | ❌                    | ❌            | ✅             |
-| VSCode       | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             |
-| Cursor       | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             |
+| Terminal     | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands | Run in Active Session |
+| ------------ | ---------------- | ------------ | --------------------- | ------------- | -------------- | --------------------- |
+| iTerm2       | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
+| Terminal.app | ✅               | ❌           | ✅                    | ✅            | ✅             | ✅                    |
+| Ghostty      | ✅               | ❌           | ❌                    | ❌            | ✅             | ✅                    |
+| VSCode       | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
+| Cursor       | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
 
 Other terminals are not supported; `automate-terminal` will exit with an error code in other terminals.
 
@@ -51,6 +51,9 @@ automate-terminal switch-to --working-directory=/path/to/project
 # Create new window with initialization script
 automate-terminal new-window /path/to/project \
   --paste-and-run="source .env && npm run dev"
+
+# Run a command in the currently active session
+automate-terminal run-in-active-session "git status"
 ```
 
 ## What is possible with terminal automation?
@@ -103,6 +106,7 @@ Capabilities:
   can_detect_session_id: True
   can_detect_working_directory: True
   can_paste_commands: True
+  can_run_in_active_session: True
 ```
 
 ### new-tab
@@ -156,6 +160,25 @@ automate-terminal list-sessions
 automate-terminal list-sessions --output=json
 ```
 
+### run-in-active-session
+
+Run a command in the currently active terminal session.
+
+This command sends the specified command to the active terminal session without switching windows or tabs. It's useful for programmatically executing commands in the terminal session you're currently working in.
+
+```bash
+# Run a simple command
+automate-terminal run-in-active-session "echo 'Hello World'"
+
+# Run a git command
+automate-terminal run-in-active-session "git status"
+
+# Run multiple commands
+automate-terminal run-in-active-session "cd /tmp && ls -la"
+```
+
+**Note:** This feature requires terminal support. VSCode and Cursor do not support running commands in the active session. Check capabilities with `automate-terminal check` to see if your terminal supports this feature.
+
 ## Options
 
 ### Output Format
@@ -203,6 +226,7 @@ from automate_terminal import (
     list_sessions,
     get_current_session_id,
     get_shell_name,
+    run_in_active_session,
     TerminalNotFoundError,
 )
 
@@ -229,4 +253,6 @@ list_sessions(dry_run=False, debug=False) -> list[dict[str, str]]
 get_current_session_id(dry_run=False, debug=False) -> str | None
 
 get_shell_name(dry_run=False, debug=False) -> str | None
+
+run_in_active_session(command, dry_run=False, debug=False) -> bool
 ```
