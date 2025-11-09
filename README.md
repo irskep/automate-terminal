@@ -24,11 +24,13 @@ pip install -e .
 
 ## Supported Terminals
 
-| Terminal     | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands |
-|--------------|------------------|--------------|----------------------|---------------|----------------|
-| iTerm2       | ✅               | ✅           | ✅                   | ✅            | ✅             |
-| Terminal.app | ✅               | ❌           | ✅                   | ✅            | ✅             |
-| Ghostty      | ✅               | ❌           | ❌                   | ❌            | ✅             |
+| Terminal     | New Tabs/Windows  | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands |
+| ------------ | ----------------- | ------------ | --------------------- | ------------- | -------------- |
+| iTerm2       | ✅                | ✅           | ✅                    | ✅            | ✅             |
+| Terminal.app | ✅                | ❌           | ✅                    | ✅            | ✅             |
+| Ghostty      | ✅                | ❌           | ❌                    | ❌            | ✅             |
+| VSCode       | ✅ (windows only) | ❌           | ✅ (macOS only)       | ❌            | ❌             |
+| Cursor       | ✅ (windows only) | ❌           | ✅ (macOS only)       | ❌            | ❌             |
 
 Other terminals are not supported; `automate-terminal` will exit with an error code in other terminals.
 
@@ -125,6 +127,12 @@ Execute commands after creating/switching sessions.
 ```
 
 Shell-specific flags override generic `--paste-and-run` when detected shell matches.
+
+**Note:** Some terminals (VSCode, Cursor) cannot execute paste scripts programmatically. When using `--output=json`, check the `paste_script_executed` field to determine if you need to run the script manually:
+
+- `true`: The paste script was executed by the terminal
+- `false`: The paste script was provided but the terminal cannot execute it (you should run it manually)
+- Field omitted: No paste script was provided
 
 ### Debug and Dry Run
 

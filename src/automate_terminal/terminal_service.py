@@ -11,6 +11,7 @@ from automate_terminal.terminals.apple import TerminalAppTerminal
 from automate_terminal.terminals.base import BaseTerminal
 from automate_terminal.terminals.ghostty import GhosttyMacTerminal
 from automate_terminal.terminals.iterm2 import ITerm2Terminal
+from automate_terminal.terminals.vscode import VSCodeTerminal
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,8 @@ def create_terminal_implementation(
         ITerm2Terminal(applescript_service),
         TerminalAppTerminal(applescript_service),
         GhosttyMacTerminal(applescript_service),
+        VSCodeTerminal(applescript_service, variant="vscode"),
+        VSCodeTerminal(applescript_service, variant="cursor"),
     ]
 
     # Try each terminal implementation's detect method

@@ -106,6 +106,23 @@ def get_paste_script(args, service: TerminalService) -> str | None:
     return "; ".join(scripts)
 
 
+def will_paste_script_execute(
+    paste_script: str | None, service: TerminalService
+) -> bool | None:
+    """Determine if the paste script will be executed.
+
+    Returns:
+        True if paste script will be executed
+        False if paste script was provided but terminal doesn't support it
+        None if no paste script was provided
+    """
+    if paste_script is None:
+        return None
+
+    caps = service.get_capabilities()
+    return caps.can_paste_commands
+
+
 def cmd_check(args):
     """Check terminal capabilities."""
     service = _get_terminal_service(args)
@@ -184,6 +201,7 @@ def cmd_switch_to(args):
         )
 
         if success:
+            paste_executed = will_paste_script_execute(paste_script, service)
             data = {
                 "success": True,
                 "action": "switched_to_existing",
@@ -194,6 +212,8 @@ def cmd_switch_to(args):
                 data["session_id"] = session_id
             if working_directory:
                 data["working_directory"] = str(working_directory)
+            if paste_executed is not None:
+                data["paste_script_executed"] = paste_executed
 
             output(args.output, data, "Switched to existing session")
             return 0
@@ -232,6 +252,7 @@ def cmd_new_tab(args):
         success = service.new_tab(working_directory, paste_script)
 
         if success:
+            paste_executed = will_paste_script_execute(paste_script, service)
             data = {
                 "success": True,
                 "action": "created_new_tab",
@@ -239,6 +260,8 @@ def cmd_new_tab(args):
                 "terminal": service.get_terminal_name(),
                 "shell": service.get_shell_name(),
             }
+            if paste_executed is not None:
+                data["paste_script_executed"] = paste_executed
 
             output(args.output, data, f"Created new tab in {working_directory}")
             return 0
@@ -268,6 +291,7 @@ def cmd_new_window(args):
         success = service.new_window(working_directory, paste_script)
 
         if success:
+            paste_executed = will_paste_script_execute(paste_script, service)
             data = {
                 "success": True,
                 "action": "created_new_window",
@@ -275,6 +299,8 @@ def cmd_new_window(args):
                 "terminal": service.get_terminal_name(),
                 "shell": service.get_shell_name(),
             }
+            if paste_executed is not None:
+                data["paste_script_executed"] = paste_executed
 
             output(args.output, data, f"Created new window in {working_directory}")
             return 0

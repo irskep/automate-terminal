@@ -11,8 +11,9 @@ from automate_terminal.models import Capabilities
 class FakeAppleScriptService:
     """Fake AppleScript service for testing."""
 
-    def __init__(self, dry_run=False):
+    def __init__(self, dry_run=False, is_macos=True):
         self.dry_run = dry_run
+        self.is_macos = is_macos
         self.executed_scripts = []
         self.result_to_return = None
 
