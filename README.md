@@ -1,8 +1,8 @@
 # automate-terminal
 
-Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, and Ghostty on macOS, with additional terminals and OSes added by request.
+Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, Ghostty, Cursor, and Visual Studio Code on macOS, with additional terminals and OSes added by request.
 
-automate-terminal is a best-effort project. Some terminals do not support automation at all!
+automate-terminal is a best-effort project. Some terminals do not support automation at all! It's also intended to be used as a component in other tools, so it errs on the side of strictness over fallbacks. See command reference for details.
 
 ## Installation
 
@@ -36,6 +36,8 @@ Other terminals are not supported; `automate-terminal` will exit with an error c
 
 ## Quick Start
 
+### Command Line
+
 ```bash
 # Check if your terminal is supported
 automate-terminal check
@@ -51,6 +53,28 @@ automate-terminal new-window /path/to/project \
   --paste-and-run="source .env && npm run dev"
 ```
 
+## What is possible with terminal automation?
+
+This is the "manage expectations" section of the README.
+
+The scope of automation covered by `automate-terminal` is "create or navigate to a terminal session in a specific working directory."
+
+### What is a terminal emulator?
+
+A terminal emulator, for the purposes of this project, is the thing you type your terminal commands into. For the author, it's iTerm2. For many people, it's the built-in terminal in Visual Studio Code. For hipsters, it's Ghostty. Linux users have, I dunno, Alacritty or something. And there's WezTerm, and the built-in terminals for macOS and Windows. Every few years, somebody spins up a new one.
+
+Within terminal emulators, a _session_ is, for the purposes of this project, one specific terminal running a shell. Your sessions might be organized in windows, or tabs, or splits within a window or tab.
+
+### How are they controlled?
+
+In **many different ways**, which is why this problem is complex enough to warrant a library! The ability to open a new tab or window, or switch to a specific existing session based on some criteria, is not standardized _at all_ among terminal emulators. The spread of what is possible for a given terminal emulator is incredibly wide, as shown by the table at the top of this README.
+
+The primary way of controlling terminal emulator GUI apps on macOS is AppleScript, which is how `automate-terminal` mostly operates. iTerm2, for example, has a comprehensive AppleScript API, which is why it has the best support. Ghostty, on the other hand, has _no_ AppleScript API at all, so `automate-terminal` uses the `SystemEvents` API to "click" its menu items, and we have no way of knowing which Ghostty tab is in a particular working directory. VSCode also has no AppleScript API, and no way to insert terminal content even, but it does have its `code <path>` command to open or switch to a specific window.
+
+All this is to say, if you are unhappy with the level of automation provided by `automate-terminal`, switch to iTerm2 or lobby your terminal emulator authors to add AppleScript support.
+
+Linux and Windows users, please educate me in the GitHub discussions!
+
 ## Commands
 
 ### check
@@ -62,9 +86,58 @@ automate-terminal check
 automate-terminal check --output=json
 ```
 
+Example output:
+
+```
+Terminal: iTerm2
+Terminal Program: iTerm.app
+Shell: zsh
+Current session ID: w0t5p1:24AF055B-8BD2-4C7F-AB1E-B310FDCBCEA1
+Current working directory: /Users/steve/dev/libraries/automate-terminal
+
+Capabilities:
+  can_create_tabs: True
+  can_create_windows: True
+  can_list_sessions: True
+  can_switch_to_session: True
+  can_detect_session_id: True
+  can_detect_working_directory: True
+  can_paste_commands: True
+```
+
+### new-tab
+
+Create new tab in a specific directory, optionally pasting content into the new tab.
+
+The term "paste" here means it will be _as if_ the user pasted text into the new terminal and hit Enter. It doesn't use your system pasteboard.
+
+```bash
+automate-terminal new-tab /path/to/dir
+
+automate-terminal new-tab /path/to/dir --paste-and-run="echo 'I am in the new directory!'"
+```
+
+There are options to run additional scripts only in specific shells. This is useful if your wrapper tool needs to support multiple shells for workflows that require nontrivial shell commands.
+
+```bash
+automate-terminal new-tab /path/to/dir --paste-and-run-fish="echo 'I am a fish shell user'"
+```
+
+### new-window
+
+Create new window. Takes the same arguments as `automate-terminal new-tab`.
+
+```bash
+automate-terminal new-window /path/to/dir
+```
+
 ### switch-to
 
-Switch to existing session. Errors if not found.
+Switch to an existing session, returning an error no matching session can be found or your terminal doesn't provide session information. You can either pass a working directory with `--working-directory`/`--wd`, or a session ID if the session ID is known.
+
+If you pass session ID, working directory is ignored. `--wd` is likely what you want, though.
+
+If you are using an unsupported terminal emulator and want to open a new terminal in a given directory as a fallback, use `new-tab` or `new-window`. `automate-terminal` doesn't do this automatically because it would create unpleasant edge cases for tools that use `automate-terminal`.
 
 ```bash
 # By working directory (or use --wd alias)
@@ -72,30 +145,6 @@ automate-terminal switch-to --working-directory=/path/to/dir
 
 # By session ID (or use --id alias)
 automate-terminal switch-to --session-id=w0t0p2:ABC123
-
-# Both (session ID takes precedence)
-automate-terminal switch-to \
-  --session-id=w0t0p2:ABC123 \
-  --working-directory=/path/to/dir
-
-# Match sessions in subdirectories
-automate-terminal switch-to --working-directory=/path/to/dir --subdirectory-ok
-```
-
-### new-tab
-
-Create new tab.
-
-```bash
-automate-terminal new-tab /path/to/dir
-```
-
-### new-window
-
-Create new window.
-
-```bash
-automate-terminal new-window /path/to/dir
 ```
 
 ### list-sessions
@@ -143,27 +192,41 @@ Shell-specific flags override generic `--paste-and-run` when detected shell matc
 
 Use `--dry-run` to see what AppleScript commands would be executed without actually running them. Useful for debugging and understanding what the tool will do.
 
-## Environment Variables
+### Python API
 
-### AUTOMATE_TERMINAL_OVERRIDE
+```python
+from automate_terminal import (
+    check,
+    new_tab,
+    new_window,
+    switch_to_session,
+    list_sessions,
+    get_current_session_id,
+    get_shell_name,
+    TerminalNotFoundError,
+)
 
-Force `automate-terminal` to use a specific terminal implementation, bypassing automatic detection.
+check(dry_run=False, debug=False) -> dict[str, str | Capabilities]
 
-**Use case:** When running from VSCode/Cursor integrated terminal, you may want to manage the underlying terminal (iTerm2, Terminal.app) instead of VSCode/Cursor itself.
+new_tab(working_directory, paste_script=None, dry_run=False, debug=False) -> bool
 
-**Values:**
-- `iterm2` - Force iTerm2 implementation
-- `terminal` or `terminal.app` - Force Terminal.app implementation
-- `ghostty` - Force Ghostty implementation
-- `vscode` - Force VSCode implementation
-- `cursor` - Force Cursor implementation
+new_window(
+  working_directory,
+  paste_script=None,
+  dry_run=False,
+  debug=False) -> bool
 
-**Example:**
-```bash
-# From VSCode integrated terminal, list iTerm2 sessions instead of VSCode windows
-export AUTOMATE_TERMINAL_OVERRIDE=iterm2
-automate-terminal list-sessions
+switch_to_session(
+  session_id=None,
+  working_directory=None,
+  paste_script=None,
+  subdirectory_ok=False,
+  dry_run=False,
+  debug=False) -> bool
 
-# Or inline
-AUTOMATE_TERMINAL_OVERRIDE=terminal automate-terminal check
+list_sessions(dry_run=False, debug=False) -> list[dict[str, str]]
+
+get_current_session_id(dry_run=False, debug=False) -> str | None
+
+get_shell_name(dry_run=False, debug=False) -> str | None
 ```

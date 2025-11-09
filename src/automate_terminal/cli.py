@@ -43,6 +43,22 @@ def output(fmt: str, data: dict, text: str):
         raise ValueError("Unknown output format: %s", fmt)
 
 
+def astext(dataclass_instance, indent: int = 0) -> str:
+    """Convert a dataclass to indented text output.
+
+    Args:
+        dataclass_instance: Dataclass instance to convert
+        indent: Number of spaces to prefix each line
+
+    Returns:
+        Multi-line string with key-value pairs
+    """
+    data = asdict(dataclass_instance)
+    prefix = " " * indent
+    lines = [f"{prefix}{key}: {value}" for key, value in data.items()]
+    return "\n".join(lines)
+
+
 def output_error(message: str, output_format: str = "text", **extra_data):
     """Output error message to stderr.
 
@@ -169,11 +185,11 @@ def cmd_check(args):
         + (f" (overridden: {override})" if override else ""),
         f"Terminal Program: {data['term_program']}",
         f"Shell: {data['shell']}",
-        f"Supports session management: {caps.can_switch_to_session}",
-        f"Supports tab creation: {caps.can_create_tabs}",
-        f"Supports window creation: {caps.can_create_windows}",
         f"Current session ID: {data['current_session_id'] or 'N/A'}",
         f"Current working directory: {data['current_working_directory']}",
+        "",
+        "Capabilities:",
+        astext(caps, indent=2),
     ]
     text = "\n".join(text_lines)
 
@@ -335,10 +351,19 @@ def cmd_list_sessions(args):
 
         lines = [f"{service.get_terminal_name()} Sessions:"]
         for session in sessions:
-            session_id = session.get("session_id", "unknown")
-            working_dir = session.get("working_directory", "unknown")
-            shell = session.get("shell", "unknown")
-            lines.append(f"{session_id} -> {working_dir} ({shell})")
+            components = []
+            if "session_id" in session:
+                session_id = session["session_id"]
+                components.append(f"{session_id} ->")
+            if "working_directory" in session:
+                components.append(session["working_directory"])
+            if "shell" in session:
+                shell = session["shell"]
+                components.append(f"({shell})")
+            if components:
+                lines.append(" ".join(components))
+            else:
+                lines.append("(unknown)")
 
         text = "\n".join(lines)
 
@@ -394,7 +419,15 @@ def main():
 
     # check command
     check_parser = subparsers.add_parser("check", help="Check terminal capabilities")
-    add_common_args(check_parser)
+    check_parser.add_argument(
+        "--output",
+        choices=["json", "text", "none"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    check_parser.add_argument(
+        "--debug", action="store_true", help="Enable debug logging"
+    )
 
     # switch-to command
     switch_parser = subparsers.add_parser(

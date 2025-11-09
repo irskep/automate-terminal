@@ -23,31 +23,8 @@ class TerminalAppTerminal(BaseTerminal):
         return platform_name == "Darwin" and term_program == "Apple_Terminal"
 
     def get_current_session_id(self) -> str | None:
-        """Get Terminal.app working directory as session identifier."""
-        try:
-            applescript = """
-            tell application "Terminal"
-                set tabTTY to tty of selected tab of front window
-                return tabTTY
-            end tell
-            """
-
-            result = run_command(
-                ["osascript", "-e", applescript],
-                timeout=5,
-                description="Get Terminal.app current tab TTY",
-            )
-
-            if result.returncode == 0 and result.stdout.strip():
-                tty = result.stdout.strip()
-                # Get working directory from shell process
-                working_dir = self._get_working_directory_from_tty(tty)
-                return working_dir
-
-            return None
-
-        except Exception:
-            return None
+        """Terminal.app doesn't have session IDs."""
+        return None
 
     def supports_session_management(self) -> bool:
         """Terminal.app supports session management via working directory detection."""
@@ -339,12 +316,7 @@ class TerminalAppTerminal(BaseTerminal):
         for line in output.split("\n"):
             line = line.strip()
             if line:
-                sessions.append(
-                    {
-                        "session_id": line,
-                        "working_directory": line,
-                    }
-                )
+                sessions.append({"working_directory": line})
 
         return sessions
 
@@ -381,7 +353,7 @@ class TerminalAppTerminal(BaseTerminal):
         return True
 
     def _can_detect_session_id(self) -> bool:
-        return True  # Uses working directory as session ID
+        return False  # Terminal.app doesn't have real session IDs
 
     def _can_paste_commands(self) -> bool:
         return True
