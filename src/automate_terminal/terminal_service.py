@@ -155,6 +155,12 @@ class TerminalService:
         )
 
         if not session_id:
+            # For terminals that can switch without session detection,
+            # try switching with the path directly
+            if self.terminal._can_switch_without_session_detection():
+                return self.terminal.switch_to_session(
+                    str(working_directory), paste_script
+                )
             return False
 
         return self.terminal.switch_to_session(session_id, paste_script)

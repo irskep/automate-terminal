@@ -158,3 +158,6 @@ class VSCodeTerminal(BaseTerminal):
 
     def _can_paste_commands(self) -> bool:
         return False
+
+    def _can_switch_without_session_detection(self) -> bool:
+        return True
