@@ -33,10 +33,9 @@ class TerminalAppTerminal(BaseTerminal):
         return False
 
     def _get_working_directory_from_tty(self, tty: str) -> str | None:
-        """Get working directory of shell process using the given TTY."""
+        # Terminal.app's AppleScript API only exposes TTY, not working directory.
+        # Work around this by: TTY → find shell PID → get that process's cwd via lsof.
         try:
-            # Terminal.app's AppleScript API only exposes the TTY, not the working directory.
-            # We work around this by: TTY → find shell PID → get that process's cwd via lsof.
             shell_cmd = f"lsof {shlex.quote(tty)} | grep -E '(zsh|bash|fish|osh|nu|pwsh|sh)' | head -1 | awk '{{print $2}}'"
             pid = self.command_service.execute_r_with_output(
                 ["bash", "-c", shell_cmd],
@@ -70,12 +69,11 @@ class TerminalAppTerminal(BaseTerminal):
     def switch_to_session_by_working_directory(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Switch to existing Terminal.app session by working directory."""
-        working_directory_str = str(working_directory)
-
         # Terminal.app can't switch to tabs directly, so we:
         # 1. Find the window containing a tab with the target directory (via TTY → PID → cwd chain)
         # 2. Use System Events to click that window's menu item to bring it to front
+        working_directory_str = str(working_directory)
+
         find_window_script = f"""
         tell application "Terminal"
             repeat with theWindow in windows
@@ -146,11 +144,8 @@ class TerminalAppTerminal(BaseTerminal):
     def open_new_tab(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open a new Terminal.app tab.
-
-        Terminal.app requires System Events (accessibility permissions) to create
-        actual tabs via Cmd+T keyboard simulation.
-        """
+        # Terminal.app requires System Events (accessibility permissions) to create
+        # actual tabs via Cmd+T keyboard simulation.
         logger.debug(f"Opening new Terminal.app tab for {working_directory}")
 
         commands = [f"cd {shlex.quote(str(working_directory))}"]
@@ -219,7 +214,6 @@ class TerminalAppTerminal(BaseTerminal):
     def open_new_window(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open a new Terminal.app window."""
         logger.debug(f"Opening new Terminal.app window for {working_directory}")
 
         commands = [f"cd {shlex.quote(str(working_directory))}"]
@@ -237,10 +231,7 @@ class TerminalAppTerminal(BaseTerminal):
         return self.applescript.execute(applescript)
 
     def list_sessions(self) -> list[dict[str, str]]:
-        """List all Terminal.app sessions with their working directories.
-
-        Note: Terminal.app doesn't have session IDs, so only working_directory is returned.
-        """
+        # Terminal.app doesn't have session IDs, so only working_directory is returned
         applescript = """
         tell application "Terminal"
             set sessionData to ""
@@ -280,10 +271,7 @@ class TerminalAppTerminal(BaseTerminal):
     def find_session_by_working_directory(
         self, target_path: str, subdirectory_ok: bool = False
     ) -> str | None:
-        """Find a session ID that matches the given working directory.
-
-        Terminal.app doesn't have session IDs, so this always returns None.
-        """
+        # Terminal.app doesn't have session IDs
         return None
 
     def get_capabilities(self) -> Capabilities:
@@ -299,7 +287,6 @@ class TerminalAppTerminal(BaseTerminal):
         )
 
     def run_in_active_session(self, command: str) -> bool:
-        """Run a command in the current active Terminal.app session."""
         logger.debug(f"Running command in active Terminal.app session: {command}")
 
         applescript = f"""

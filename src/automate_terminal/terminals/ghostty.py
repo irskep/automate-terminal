@@ -12,18 +12,16 @@ logger = logging.getLogger(__name__)
 
 
 class GhosttyMacTerminal(BaseTerminal):
-    """Ghostty implementation. Ghostty has no AppleScript support, so it's bare-bones."""
+    # Ghostty has no AppleScript support, so it's bare-bones
 
     @property
     def display_name(self) -> str:
         return "Ghostty"
 
     def detect(self, term_program: str | None, platform_name: str) -> bool:
-        """Detect if Ghostty is the current terminal."""
         return platform_name == "Darwin" and term_program == "ghostty"
 
     def get_current_session_id(self) -> str | None:
-        """Ghostty doesn't support session IDs."""
         return None
 
     def supports_session_management(self) -> bool:
@@ -43,8 +41,7 @@ class GhosttyMacTerminal(BaseTerminal):
     def open_new_tab(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        # Ghostty requires System Events (accessibility permissions) to create
-        # actual tabs via Cmd+T keyboard simulation.
+        # Requires accessibility permissions to simulate Cmd+T
         logger.debug(f"Opening new Ghostty tab for {working_directory}")
 
         commands = [f"cd {shlex.quote(str(working_directory))}"]
@@ -118,7 +115,6 @@ class GhosttyMacTerminal(BaseTerminal):
         )
 
     def run_in_active_session(self, command: str) -> bool:
-        """Run a command in the current active Ghostty session."""
         logger.debug(f"Running command in active Ghostty session: {command}")
 
         applescript = f"""

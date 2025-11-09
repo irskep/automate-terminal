@@ -12,53 +12,27 @@ logger = logging.getLogger(__name__)
 
 
 class TmuxTerminal(BaseTerminal):
-    """Tmux terminal multiplexer implementation."""
-
     @property
     def display_name(self) -> str:
         return "tmux"
 
     def detect(self, term_program: str | None, platform_name: str) -> bool:
-        """Detect if we're running inside tmux.
-
-        Args:
-            term_program: Value of TERM_PROGRAM environment variable (unused for tmux)
-            platform_name: Platform name (tmux works on all platforms)
-
-        Returns:
-            True if running inside tmux (TMUX env var is set)
-        """
         return os.getenv("TMUX") is not None
 
     def get_current_session_id(self) -> str | None:
-        """Get current tmux pane ID.
-
-        Returns:
-            Current pane ID (e.g., '%0', '%1') or None if not available
-        """
         pane_id = os.getenv("TMUX_PANE")
         logger.debug(f"Current tmux pane ID: {pane_id}")
         return pane_id
 
     def supports_session_management(self) -> bool:
-        """Tmux supports comprehensive session management."""
         return True
 
     def session_exists(self, session_id: str) -> bool:
-        """Check if a tmux pane exists.
-
-        Args:
-            session_id: Pane ID (e.g., '%0')
-
-        Returns:
-            True if pane exists, False otherwise
-        """
         if not session_id:
             return False
 
         logger.debug(f"Checking if tmux pane exists: {session_id}")
 
-        # Use tmux list-panes to check if pane exists
         try:
             output = self.command_service.execute_r_with_output(
                 ["tmux", "list-panes", "-a", "-F", "#{pane_id}"],
@@ -73,15 +47,6 @@ class TmuxTerminal(BaseTerminal):
         return False
 
     def session_in_directory(self, session_id: str, directory: Path) -> bool:
-        """Check if tmux pane exists and is in the specified directory.
-
-        Args:
-            session_id: Pane ID (e.g., '%0')
-            directory: Target directory path
-
-        Returns:
-            True if pane exists and is in directory, False otherwise
-        """
         if not session_id:
             return False
 
@@ -110,15 +75,6 @@ class TmuxTerminal(BaseTerminal):
     def switch_to_session(
         self, session_id: str, session_init_script: str | None = None
     ) -> bool:
-        """Switch to an existing tmux pane.
-
-        Args:
-            session_id: Pane ID to switch to (e.g., '%0')
-            session_init_script: Optional script to run after switching
-
-        Returns:
-            True if switch succeeded, False otherwise
-        """
         logger.debug(f"Switching to tmux pane: {session_id}")
 
         try:
@@ -180,22 +136,12 @@ class TmuxTerminal(BaseTerminal):
     def open_new_tab(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open a new tmux window (equivalent to a tab).
-
-        Args:
-            working_directory: Directory to start in
-            session_init_script: Optional script to run in new window
-
-        Returns:
-            True if window creation succeeded, False otherwise
-        """
+        # Creates a new tmux window (equivalent to a tab)
         logger.debug(f"Opening new tmux window for {working_directory}")
 
         try:
-            # Create new window with specified working directory
             cmd = ["tmux", "new-window", "-c", str(working_directory)]
 
-            # If there's a script to run, add it to the command
             if session_init_script:
                 cmd.append(session_init_script)
 
@@ -211,21 +157,10 @@ class TmuxTerminal(BaseTerminal):
     def open_new_window(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open a new tmux session (equivalent to a window).
-
-        For tmux, we create a detached session which is like opening a new window.
-
-        Args:
-            working_directory: Directory to start in
-            session_init_script: Optional script to run in new session
-
-        Returns:
-            True if session creation succeeded, False otherwise
-        """
+        # Creates a detached tmux session (equivalent to a window)
         logger.debug(f"Opening new tmux session for {working_directory}")
 
         try:
-            # Create new detached session with specified working directory
             cmd = ["tmux", "new-session", "-d", "-c", str(working_directory)]
 
             if not self.command_service.execute_rw(
@@ -234,9 +169,7 @@ class TmuxTerminal(BaseTerminal):
             ):
                 return False
 
-            # If there's a script to run, we need to find the new session and send keys
             if session_init_script:
-                # Get the most recently created session
                 session_id = self.command_service.execute_r_with_output(
                     ["tmux", "display-message", "-p", "-t", "#{session_id}"],
                     description="Get newest session ID",
@@ -261,11 +194,6 @@ class TmuxTerminal(BaseTerminal):
             return False
 
     def list_sessions(self) -> list[dict[str, str]]:
-        """List all tmux panes with their working directories.
-
-        Returns:
-            List of dicts with 'session_id' and 'working_directory' keys
-        """
         logger.debug("Listing all tmux panes")
 
         try:
@@ -299,25 +227,14 @@ class TmuxTerminal(BaseTerminal):
     def find_session_by_working_directory(
         self, target_path: str, subdirectory_ok: bool = False
     ) -> str | None:
-        """Find a tmux pane ID that matches the given working directory.
-
-        Args:
-            target_path: Target directory path
-            subdirectory_ok: If True, match panes in subdirectories of target_path
-
-        Returns:
-            Pane ID if found, None otherwise
-        """
         sessions = self.list_sessions()
-        target_path = str(Path(target_path).resolve())  # Normalize path
+        target_path = str(Path(target_path).resolve())
 
-        # First try exact match
         for session in sessions:
             session_path = str(Path(session["working_directory"]).resolve())
             if session_path == target_path:
                 return session["session_id"]
 
-        # Try subdirectory match if requested
         if subdirectory_ok:
             for session in sessions:
                 session_path = str(Path(session["working_directory"]).resolve())
@@ -339,17 +256,8 @@ class TmuxTerminal(BaseTerminal):
         )
 
     def run_in_active_session(self, command: str) -> bool:
-        """Run a command in the current active tmux pane.
-
-        Args:
-            command: Shell command to execute
-
-        Returns:
-            True if command was sent successfully, False otherwise
-        """
         logger.debug(f"Running command in active tmux pane: {command}")
 
-        # Get the current pane ID
         current_pane = self.get_current_session_id()
         if not current_pane:
             logger.error("Could not determine current tmux pane")

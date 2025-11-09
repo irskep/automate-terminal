@@ -13,47 +13,25 @@ logger = logging.getLogger(__name__)
 
 
 class KittyTerminal(BaseTerminal):
-    """Kitty terminal emulator implementation.
-
-    Note: Requires allow_remote_control=yes in kitty.conf to function.
-    """
+    # Requires allow_remote_control=yes in kitty.conf
 
     @property
     def display_name(self) -> str:
         return "Kitty"
 
     def detect(self, term_program: str | None, platform_name: str) -> bool:
-        """Detect if we're running inside Kitty.
-
-        Args:
-            term_program: Value of TERM_PROGRAM environment variable (unused for Kitty)
-            platform_name: Platform name (Kitty works on macOS, Linux, BSD)
-
-        Returns:
-            True if running inside Kitty (KITTY_WINDOW_ID env var is set)
-        """
         return os.getenv("KITTY_WINDOW_ID") is not None
 
     def get_current_session_id(self) -> str | None:
-        """Get current Kitty window ID.
-
-        Returns:
-            Current window ID or None if not available
-        """
         window_id = os.getenv("KITTY_WINDOW_ID")
         logger.debug(f"Current Kitty window ID: {window_id}")
         return window_id
 
     def supports_session_management(self) -> bool:
-        """Kitty supports comprehensive session management via remote control."""
         return True
 
     def _get_all_windows(self) -> list[dict]:
-        """Get all Kitty windows from all OS windows and tabs.
-
-        Returns:
-            List of window objects with id, cwd, title, etc.
-        """
+        # Navigate nested structure: OS windows -> tabs -> windows
         try:
             output = self.command_service.execute_r_with_output(
                 ["kitten", "@", "ls"],
@@ -66,7 +44,6 @@ class KittyTerminal(BaseTerminal):
             os_windows = json.loads(output)
             all_windows = []
 
-            # Navigate the nested structure: OS windows -> tabs -> windows
             for os_window in os_windows:
                 for tab in os_window.get("tabs", []):
                     for window in tab.get("windows", []):
@@ -79,14 +56,6 @@ class KittyTerminal(BaseTerminal):
             return []
 
     def session_exists(self, session_id: str) -> bool:
-        """Check if a Kitty window exists.
-
-        Args:
-            session_id: Window ID
-
-        Returns:
-            True if window exists, False otherwise
-        """
         if not session_id:
             return False
 
@@ -97,15 +66,6 @@ class KittyTerminal(BaseTerminal):
         return session_id in window_ids
 
     def session_in_directory(self, session_id: str, directory: Path) -> bool:
-        """Check if Kitty window exists and is in the specified directory.
-
-        Args:
-            session_id: Window ID
-            directory: Target directory path
-
-        Returns:
-            True if window exists and is in directory, False otherwise
-        """
         if not session_id:
             return False
 
@@ -122,26 +82,15 @@ class KittyTerminal(BaseTerminal):
     def switch_to_session(
         self, session_id: str, session_init_script: str | None = None
     ) -> bool:
-        """Switch to an existing Kitty window.
-
-        Args:
-            session_id: Window ID to switch to
-            session_init_script: Optional script to run after switching
-
-        Returns:
-            True if switch succeeded, False otherwise
-        """
         logger.debug(f"Switching to Kitty window: {session_id}")
 
         try:
-            # Focus the target window
             if not self.command_service.execute_rw(
                 ["kitten", "@", "focus-window", "--match", f"id:{session_id}"],
                 description=f"Switch to window {session_id}",
             ):
                 return False
 
-            # If there's a script to run, send it to the window
             if session_init_script:
                 return self.command_service.execute_rw(
                     [
@@ -164,19 +113,9 @@ class KittyTerminal(BaseTerminal):
     def open_new_tab(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open a new Kitty tab.
-
-        Args:
-            working_directory: Directory to start in
-            session_init_script: Optional script to run in new tab
-
-        Returns:
-            True if tab creation succeeded, False otherwise
-        """
         logger.debug(f"Opening new Kitty tab for {working_directory}")
 
         try:
-            # Create new tab with specified working directory
             cmd = [
                 "kitten",
                 "@",
@@ -186,10 +125,7 @@ class KittyTerminal(BaseTerminal):
                 str(working_directory),
             ]
 
-            # If there's a script to run, we can't easily get the new window ID
-            # from launch, so we'll run the script as the launch command
             if session_init_script:
-                # Use the shell to run both cd and the script
                 cmd.extend(
                     [
                         "sh",
@@ -214,19 +150,9 @@ class KittyTerminal(BaseTerminal):
     def open_new_window(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open a new Kitty OS window.
-
-        Args:
-            working_directory: Directory to start in
-            session_init_script: Optional script to run in new window
-
-        Returns:
-            True if window creation succeeded, False otherwise
-        """
         logger.debug(f"Opening new Kitty window for {working_directory}")
 
         try:
-            # Create new OS window with specified working directory
             cmd = [
                 "kitten",
                 "@",
@@ -236,7 +162,6 @@ class KittyTerminal(BaseTerminal):
                 str(working_directory),
             ]
 
-            # If there's a script to run, execute it as the launch command
             if session_init_script:
                 cmd.extend(
                     [
@@ -260,11 +185,6 @@ class KittyTerminal(BaseTerminal):
             return False
 
     def list_sessions(self) -> list[dict[str, str]]:
-        """List all Kitty windows with their working directories.
-
-        Returns:
-            List of dicts with 'session_id' and 'working_directory' keys
-        """
         logger.debug("Listing all Kitty windows")
 
         windows = self._get_all_windows()
@@ -288,25 +208,14 @@ class KittyTerminal(BaseTerminal):
     def find_session_by_working_directory(
         self, target_path: str, subdirectory_ok: bool = False
     ) -> str | None:
-        """Find a Kitty window ID that matches the given working directory.
-
-        Args:
-            target_path: Target directory path
-            subdirectory_ok: If True, match windows in subdirectories of target_path
-
-        Returns:
-            Window ID if found, None otherwise
-        """
         sessions = self.list_sessions()
-        target_path = str(Path(target_path).resolve())  # Normalize path
+        target_path = str(Path(target_path).resolve())
 
-        # First try exact match
         for session in sessions:
             session_path = str(Path(session["working_directory"]).resolve())
             if session_path == target_path:
                 return session["session_id"]
 
-        # Try subdirectory match if requested
         if subdirectory_ok:
             for session in sessions:
                 session_path = str(Path(session["working_directory"]).resolve())
@@ -328,17 +237,8 @@ class KittyTerminal(BaseTerminal):
         )
 
     def run_in_active_session(self, command: str) -> bool:
-        """Run a command in the current active Kitty window.
-
-        Args:
-            command: Shell command to execute
-
-        Returns:
-            True if command was sent successfully, False otherwise
-        """
         logger.debug(f"Running command in active Kitty window: {command}")
 
-        # Get the current window ID
         current_window = self.get_current_session_id()
         if not current_window:
             logger.error("Could not determine current Kitty window")
