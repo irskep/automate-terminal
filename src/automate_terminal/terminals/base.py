@@ -105,14 +105,7 @@ class BaseTerminal(ABC):
         return None
 
     def run_in_active_session(self, command: str) -> bool:
-        """Run a command in the current active terminal session.
-
-        Args:
-            command: Shell command to execute
-
-        Returns:
-            True if command was sent successfully, False otherwise
-        """
+        """Run a command in the current active terminal session."""
         return False
 
     def get_shell_name(self) -> str | None:
@@ -136,35 +129,27 @@ class BaseTerminal(ABC):
         )
 
     def _can_create_tabs(self) -> bool:
-        """Override in subclass to indicate tab creation support."""
+        """Whether creating tabs is supported"""
         return False
 
     def _can_create_windows(self) -> bool:
-        """Override in subclass to indicate window creation support."""
+        """Whether creating windows is supported"""
         return False
 
     def _can_list_sessions(self) -> bool:
-        """Override in subclass to indicate session listing support."""
+        """Whether we can list all sessions with their working directories"""
         return False
 
     def _can_switch_to_session(self) -> bool:
-        """Override in subclass to indicate session switching support.
-
-        This means: can switch to existing sessions by any means
-        (session ID, working directory, or other mechanisms).
-        """
+        """Whether we are able to switch to a specific session by ID or by working directory"""
         return False
 
     def _can_detect_session_id(self) -> bool:
-        """Override in subclass to indicate session ID detection support."""
+        """Whether we can determine a unique ID for a given session, other than working directory"""
         return False
 
     def _can_detect_working_directory(self) -> bool:
-        """Override in subclass to indicate working directory detection support.
-
-        This means: can determine which sessions/tabs/windows are in which directories.
-        Not just "can get current working directory from environment".
-        """
+        """Whether we can figure out which session responds to a given working directory"""
         return False
 
     def _can_paste_commands(self) -> bool:

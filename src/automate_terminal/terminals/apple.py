@@ -33,8 +33,9 @@ class TerminalAppTerminal(BaseTerminal):
     def _get_working_directory_from_tty(self, tty: str) -> str | None:
         """Get working directory of shell process using the given TTY."""
         try:
-            # Find shell process for this TTY
-            shell_cmd = f"lsof {shlex.quote(tty)} | grep -E '(zsh|bash|sh)' | head -1 | awk '{{print $2}}'"
+            # Terminal.app's AppleScript API only exposes the TTY, not the working directory.
+            # We work around this by: TTY → find shell PID → get that process's cwd via lsof.
+            shell_cmd = f"lsof {shlex.quote(tty)} | grep -E '(zsh|bash|fish|osh|nu|pwsh|sh)' | head -1 | awk '{{print $2}}'"
             pid = self.command_service.execute_r_with_output(
                 ["bash", "-c", shell_cmd],
                 timeout=5,
@@ -70,14 +71,16 @@ class TerminalAppTerminal(BaseTerminal):
         """Switch to existing Terminal.app session by working directory."""
         working_directory_str = str(working_directory)
 
-        # Find the window title that contains our target directory
+        # Terminal.app can't switch to tabs directly, so we:
+        # 1. Find the window containing a tab with the target directory (via TTY → PID → cwd chain)
+        # 2. Use System Events to click that window's menu item to bring it to front
         find_window_script = f"""
         tell application "Terminal"
             repeat with theWindow in windows
                 repeat with theTab in tabs of theWindow
                     try
                         set tabTTY to tty of theTab
-                        set shellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|sh)' | head -1 | awk '{{print $2}}'"
+                        set shellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|fish|osh|nu|pwsh|sh)' | head -1 | awk '{{print $2}}'"
                         set shellPid to do shell script shellCmd
                         if shellPid is not "" then
                             set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{{print $9}}'"
@@ -243,7 +246,7 @@ class TerminalAppTerminal(BaseTerminal):
                 repeat with theTab in tabs of theWindow
                     try
                         set tabTTY to tty of theTab
-                        set shellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|sh)' | head -1 | awk '{print $2}'"
+                        set shellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|fish|osh|nu|pwsh|sh)' | head -1 | awk '{print $2}'"
                         set shellPid to do shell script shellCmd
                         if shellPid is not "" then
                             set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{print $9}'"
