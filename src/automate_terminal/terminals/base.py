@@ -135,8 +135,12 @@ class BaseTerminal(ABC):
         return False
 
     def _can_detect_working_directory(self) -> bool:
-        """Override in subclass to indicate working directory detection support."""
-        return True  # Can always get cwd from environment
+        """Override in subclass to indicate working directory detection support.
+
+        This means: can determine which sessions/tabs/windows are in which directories.
+        Not just "can get current working directory from environment".
+        """
+        return False
 
     def _can_paste_commands(self) -> bool:
         """Override in subclass to indicate command pasting support."""

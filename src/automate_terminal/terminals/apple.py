@@ -355,5 +355,8 @@ class TerminalAppTerminal(BaseTerminal):
     def _can_detect_session_id(self) -> bool:
         return False  # Terminal.app doesn't have real session IDs
 
+    def _can_detect_working_directory(self) -> bool:
+        return True
+
     def _can_paste_commands(self) -> bool:
         return True

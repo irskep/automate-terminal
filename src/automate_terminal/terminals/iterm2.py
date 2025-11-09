@@ -252,5 +252,8 @@ class ITerm2Terminal(BaseTerminal):
     def _can_detect_session_id(self) -> bool:
         return True
 
+    def _can_detect_working_directory(self) -> bool:
+        return True
+
     def _can_paste_commands(self) -> bool:
         return True

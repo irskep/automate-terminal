@@ -85,7 +85,8 @@ def _get_terminal_service(args) -> TerminalService | None:
         TerminalService instance or None if terminal not supported
     """
     try:
-        applescript_service = AppleScriptService(dry_run=args.dry_run)
+        dry_run = getattr(args, "dry_run", False)
+        applescript_service = AppleScriptService(dry_run=dry_run)
         return TerminalService(applescript_service)
     except TerminalNotFoundError:
         output_error("Terminal not supported", args.output)
