@@ -75,9 +75,9 @@ macOS terminals are primarily controlled via AppleScript. iTerm2, for example, h
 
 **tmux** uses its native CLI commands (`tmux list-panes`, `tmux select-window`, `tmux send-keys`, etc.) and works identically across all platforms where tmux is available.
 
-**WezTerm** uses its native CLI commands (`wezterm cli list`, `wezterm cli activate-pane`, `wezterm cli send-text`, etc.) and works identically across all platforms where WezTerm is available (macOS, Linux, BSD, Windows).
+**WezTerm** uses its native CLI commands (`wezterm cli list`, `wezterm cli activate-pane`, `wezterm cli send-text`, etc.) and works identically across all platforms where WezTerm is available.
 
-**Kitty** uses its remote control protocol (`kitten @ ls`, `kitten @ focus-window`, `kitten @ send-text`, etc.) and works across macOS, Linux, and BSD. **Note: Kitty requires `allow_remote_control yes` in your `kitty.conf` file to enable automation.**
+**Kitty** uses its remote control protocol (`kitten @ ls`, `kitten @ focus-window`, `kitten @ send-text`, etc.) and works across all platforms where Kitty is available. **Note: Kitty requires `allow_remote_control yes` in your `kitty.conf` file to enable automation.**
 
 All this is to say, if you are unhappy with the level of automation provided by `automate-terminal` on macOS, switch to another terminal emulator, or lobby the authors of your favorite one to add automation support.
 
