@@ -6,9 +6,22 @@
 
 ### Added
 
+- Python API
+  - `check()` - Check terminal type and capabilities
+  - `new_tab()` - Create new tab
+  - `new_window()` - Create new window
+  - `switch_to_session()` - Switch to existing session
+  - `list_sessions()` - List all sessions
+  - `get_current_session_id()` - Get current session ID
+  - `get_shell_name()` - Get shell name
+  - `TerminalNotFoundError` exception for unsupported terminals
+- Improve `check` output
+
 ### Changed
 
 ### Fixed
+
+- Terminal.app `list_sessions()` no longer duplicates working directory as session_id
 
 ## 0.1.1 - 2025-01-08
 
