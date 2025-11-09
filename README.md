@@ -4,6 +4,8 @@ Automate opening of new tabs and windows in terminal programs. Currently support
 
 automate-terminal is a best-effort project. Some terminals do not support automation at all! It's also intended to be used as a component in other tools, so it errs on the side of strictness over fallbacks. See the command reference for specifics.
 
+`automate-terminal` was originally part of [autowt](https://steveasleep.com/autowt/), the git worktree manager.
+
 ## Installation
 
 ```bash
