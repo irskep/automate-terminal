@@ -2,6 +2,7 @@
 
 import argparse
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 
@@ -9,8 +10,6 @@ from automate_terminal.models import Capabilities
 
 
 class FakeAppleScriptService:
-    """Fake AppleScript service for testing."""
-
     def __init__(self, command_service=None, dry_run=False, is_macos=True):
         self.command_service = command_service or FakeCommandService(dry_run=dry_run)
         self.dry_run = dry_run
@@ -19,22 +18,15 @@ class FakeAppleScriptService:
         self.result_to_return = None
 
     def execute(self, script: str) -> bool:
-        """Record script execution, return True."""
         self.executed_scripts.append(("execute", script))
         return True
 
     def execute_with_result(self, script: str) -> str | None:
-        """Record script execution, return configured result."""
         self.executed_scripts.append(("execute_with_result", script))
         return self.result_to_return
 
-    def escape_string(self, text: str) -> str:
-        """Escape text for AppleScript."""
-        return text.replace("\\", "\\\\").replace('"', '\\"')
-
-    def escape_path(self, path) -> str:
-        """Escape path for AppleScript."""
-        return str(path).replace("\\", "\\\\").replace('"', '\\"')
+    def escape(self, val: Path | str) -> str:
+        return str(val).replace("\\", "\\\\").replace('"', '\\"')
 
 
 class FakeCommandService:

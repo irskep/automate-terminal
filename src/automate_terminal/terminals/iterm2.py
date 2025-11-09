@@ -73,7 +73,7 @@ class ITerm2Terminal(BaseTerminal):
                     repeat with theSession in sessions of theTab
                         if id of theSession is "{session_uuid}" then
                             set currentDirectory to get variable named "PWD" of theSession
-                            if currentDirectory starts with "{self.applescript.escape_string(str(directory))}" then
+                            if currentDirectory starts with "{self.applescript.escape(str(directory))}" then
                                 return true
                             else
                                 return false
@@ -111,7 +111,7 @@ class ITerm2Terminal(BaseTerminal):
         if session_init_script:
             applescript += f"""
                             tell theSession
-                                write text "{self.applescript.escape_string(session_init_script)}"
+                                write text "{self.applescript.escape(session_init_script)}"
                             end tell"""
 
         applescript += """
@@ -131,7 +131,7 @@ class ITerm2Terminal(BaseTerminal):
         """Open a new iTerm2 tab."""
         logger.debug(f"Opening new iTerm2 tab for {working_directory}")
 
-        commands = [f"cd {self.applescript.escape_path(working_directory)}"]
+        commands = [f"cd {self.applescript.escape(working_directory)}"]
 
         if session_init_script:
             commands.append(session_init_script)
@@ -155,7 +155,7 @@ class ITerm2Terminal(BaseTerminal):
         """Open a new iTerm2 window."""
         logger.debug(f"Opening new iTerm2 window for {working_directory}")
 
-        commands = [f"cd {self.applescript.escape_path(working_directory)}"]
+        commands = [f"cd {self.applescript.escape(working_directory)}"]
         if session_init_script:
             commands.append(session_init_script)
 
@@ -268,7 +268,7 @@ class ITerm2Terminal(BaseTerminal):
         applescript = f"""
         tell application "iTerm2"
             tell current session of current window
-                write text "{self.applescript.escape_string(command)}"
+                write text "{self.applescript.escape(command)}"
             end tell
         end tell
         """

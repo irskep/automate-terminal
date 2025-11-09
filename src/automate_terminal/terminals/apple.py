@@ -44,7 +44,7 @@ class TerminalAppTerminal(BaseTerminal):
                         if shellPid is not "" then
                             set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{{print $9}}'"
                             set workingDir to do shell script cwdCmd
-                            if workingDir is "{self.applescript.escape_string(session_id)}" then
+                            if workingDir is "{self.applescript.escape(session_id)}" then
                                 return true
                             end if
                         end if
@@ -102,7 +102,7 @@ class TerminalAppTerminal(BaseTerminal):
                         if shellPid is not "" then
                             set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{{print $9}}'"
                             set workingDir to do shell script cwdCmd
-                            if workingDir is "{self.applescript.escape_string(session_id)}" then
+                            if workingDir is "{self.applescript.escape(session_id)}" then
                                 -- Return the window name for menu matching
                                 return name of theWindow
                             end if
@@ -124,12 +124,12 @@ class TerminalAppTerminal(BaseTerminal):
             tell process "Terminal"
                 try
                     -- Click the menu item with the exact window name
-                    click menu item "{self.applescript.escape_string(window_name)}" of menu "Window" of menu bar 1
+                    click menu item "{self.applescript.escape(window_name)}" of menu "Window" of menu bar 1
                     return "success"
                 on error errMsg
                     -- Try with localized menu name
                     try
-                        click menu item "{self.applescript.escape_string(window_name)}" of menu "窗口" of menu bar 1
+                        click menu item "{self.applescript.escape(window_name)}" of menu "窗口" of menu bar 1
                         return "success"
                     on error
                         return "error: " & errMsg
@@ -144,7 +144,7 @@ class TerminalAppTerminal(BaseTerminal):
             init_result = self.applescript.execute(
                 f"""
             tell application "Terminal"
-                do script "{self.applescript.escape_string(session_init_script)}" in front window
+                do script "{self.applescript.escape(session_init_script)}" in front window
             end tell
             """
             )
@@ -168,7 +168,7 @@ class TerminalAppTerminal(BaseTerminal):
                         if shellPid is not "" then
                             set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{{print $9}}'"
                             set workingDir to do shell script cwdCmd
-                            if workingDir starts with "{self.applescript.escape_string(str(directory))}" then
+                            if workingDir starts with "{self.applescript.escape(str(directory))}" then
                                 return true
                             end if
                         end if
@@ -196,7 +196,7 @@ class TerminalAppTerminal(BaseTerminal):
         if session_init_script:
             commands.append(session_init_script)
 
-        command_string = self.applescript.escape_string("; ".join(commands))
+        command_string = self.applescript.escape("; ".join(commands))
 
         # First check if we have any Terminal windows open
         check_windows_script = """
@@ -265,7 +265,7 @@ class TerminalAppTerminal(BaseTerminal):
         if session_init_script:
             commands.append(session_init_script)
 
-        command_string = self.applescript.escape_string("; ".join(commands))
+        command_string = self.applescript.escape("; ".join(commands))
 
         applescript = f"""
         tell application "Terminal"
@@ -363,7 +363,7 @@ class TerminalAppTerminal(BaseTerminal):
 
         applescript = f"""
         tell application "Terminal"
-            do script "{self.applescript.escape_string(command)}" in selected tab of front window
+            do script "{self.applescript.escape(command)}" in selected tab of front window
         end tell
         """
 

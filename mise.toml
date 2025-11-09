@@ -1,10 +1,18 @@
+# automate-terminal uses Mise as its dev tool manager, to ensure
+# we use consistent versions of Python and Mise. Once set up,
+# you can transparently use uv to do everything, and treat mise.toml
+# like a Makefile
+# 
+# > mise trust
+# > mise install
+# > mise test
+
 [settings]
 python.uv_venv_auto = true
 
 [tools]
 python = "3.12"
 uv = "latest"
-jq = "latest"
 
 [env]
 _.python.venv = { path = ".venv" }
