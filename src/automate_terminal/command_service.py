@@ -45,6 +45,38 @@ class CommandService:
             logger.error(f"Failed to run command {cmd}: {e}")
             return False
 
+    def execute_r_with_output(
+        self, cmd: list[str], timeout: int = 10, description: str | None = None
+    ) -> str | None:
+        """Execute a read-only shell command and return output string.
+
+        Read-only commands always execute, even in dry-run mode.
+
+        Args:
+            cmd: Command and arguments as a list
+            timeout: Timeout in seconds
+            description: Optional description for logging
+
+        Returns:
+            Command stdout if successful, None otherwise
+        """
+        try:
+            result = run_command_r(
+                cmd,
+                timeout=timeout,
+                description=description,
+            )
+
+            if result.returncode != 0:
+                logger.error(f"Command failed with exit code {result.returncode}")
+                return None
+
+            return result.stdout.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to run command {cmd}: {e}")
+            return None
+
     def execute_rw(
         self, cmd: list[str], timeout: int = 10, description: str | None = None
     ) -> bool:

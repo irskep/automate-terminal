@@ -3,35 +3,14 @@
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-from automate_terminal.utils import run_command_r, run_command_rw
 
 from .base import BaseTerminal
-
-if TYPE_CHECKING:
-    from automate_terminal.applescript_service import AppleScriptService
-    from automate_terminal.command_service import CommandService
 
 logger = logging.getLogger(__name__)
 
 
 class TmuxTerminal(BaseTerminal):
     """Tmux terminal multiplexer implementation."""
-
-    def __init__(
-        self,
-        applescript_service: "AppleScriptService",
-        command_service: "CommandService",
-    ):
-        """Initialize tmux terminal.
-
-        Args:
-            applescript_service: Service for executing AppleScript (not used by tmux)
-            command_service: Service for executing shell commands
-        """
-        super().__init__(applescript_service)
-        self.command_service = command_service
 
     @property
     def display_name(self) -> str:
@@ -79,12 +58,12 @@ class TmuxTerminal(BaseTerminal):
 
         # Use tmux list-panes to check if pane exists
         try:
-            result = run_command_r(
+            output = self.command_service.execute_r_with_output(
                 ["tmux", "list-panes", "-a", "-F", "#{pane_id}"],
                 description="List all tmux panes",
             )
-            if result.returncode == 0 and result.stdout:
-                pane_ids = [line.strip() for line in result.stdout.strip().split("\n")]
+            if output:
+                pane_ids = [line.strip() for line in output.split("\n")]
                 return session_id in pane_ids
         except Exception as e:
             logger.error(f"Failed to check if pane exists: {e}")
@@ -107,7 +86,7 @@ class TmuxTerminal(BaseTerminal):
         logger.debug(f"Checking if pane {session_id} is in directory {directory}")
 
         try:
-            result = run_command_r(
+            pane_path = self.command_service.execute_r_with_output(
                 [
                     "tmux",
                     "display-message",
@@ -119,8 +98,7 @@ class TmuxTerminal(BaseTerminal):
                 ],
                 description=f"Get working directory for pane {session_id}",
             )
-            if result.returncode == 0 and result.stdout:
-                pane_path = result.stdout.strip()
+            if pane_path:
                 return pane_path == str(directory)
         except Exception as e:
             logger.error(f"Failed to check pane directory: {e}")
@@ -143,7 +121,7 @@ class TmuxTerminal(BaseTerminal):
 
         try:
             # First, get the window that contains this pane
-            window_result = run_command_r(
+            window_id = self.command_service.execute_r_with_output(
                 [
                     "tmux",
                     "display-message",
@@ -156,37 +134,30 @@ class TmuxTerminal(BaseTerminal):
                 description=f"Get window for pane {session_id}",
             )
 
-            if window_result.returncode != 0:
+            if not window_id:
                 logger.error(f"Failed to get window for pane {session_id}")
                 return False
 
-            window_id = window_result.stdout.strip()
             logger.debug(f"Pane {session_id} is in window {window_id}")
 
             # Switch to the window containing the target pane
-            select_window_result = run_command_rw(
+            if not self.command_service.execute_rw(
                 ["tmux", "select-window", "-t", window_id],
                 description=f"Switch to window {window_id}",
-                dry_run=self.command_service.dry_run,
-            )
-
-            if select_window_result.returncode != 0:
+            ):
                 logger.error(f"Failed to switch to window {window_id}")
                 return False
 
             # Then switch to the specific pane within that window
-            result = run_command_rw(
+            if not self.command_service.execute_rw(
                 ["tmux", "select-pane", "-t", session_id],
                 description=f"Switch to pane {session_id}",
-                dry_run=self.command_service.dry_run,
-            )
-
-            if result.returncode != 0:
+            ):
                 return False
 
             # If there's a script to run, send it to the pane
             if session_init_script:
-                send_result = run_command_rw(
+                return self.command_service.execute_rw(
                     [
                         "tmux",
                         "send-keys",
@@ -196,9 +167,7 @@ class TmuxTerminal(BaseTerminal):
                         "Enter",
                     ],
                     description=f"Send script to pane {session_id}",
-                    dry_run=self.command_service.dry_run,
                 )
-                return send_result.returncode == 0
 
             return True
 
@@ -228,13 +197,10 @@ class TmuxTerminal(BaseTerminal):
             if session_init_script:
                 cmd.append(session_init_script)
 
-            result = run_command_rw(
+            return self.command_service.execute_rw(
                 cmd,
                 description=f"Create new tmux window in {working_directory}",
-                dry_run=self.command_service.dry_run,
             )
-
-            return result.returncode == 0
 
         except Exception as e:
             logger.error(f"Failed to create new window: {e}")
@@ -260,25 +226,21 @@ class TmuxTerminal(BaseTerminal):
             # Create new detached session with specified working directory
             cmd = ["tmux", "new-session", "-d", "-c", str(working_directory)]
 
-            result = run_command_rw(
+            if not self.command_service.execute_rw(
                 cmd,
                 description=f"Create new tmux session in {working_directory}",
-                dry_run=self.command_service.dry_run,
-            )
-
-            if result.returncode != 0:
+            ):
                 return False
 
             # If there's a script to run, we need to find the new session and send keys
             if session_init_script:
                 # Get the most recently created session
-                session_result = run_command_r(
+                session_id = self.command_service.execute_r_with_output(
                     ["tmux", "display-message", "-p", "-t", "#{session_id}"],
                     description="Get newest session ID",
                 )
-                if session_result.returncode == 0 and session_result.stdout:
-                    session_id = session_result.stdout.strip()
-                    run_command_rw(
+                if session_id:
+                    self.command_service.execute_rw(
                         [
                             "tmux",
                             "send-keys",
@@ -288,7 +250,6 @@ class TmuxTerminal(BaseTerminal):
                             "Enter",
                         ],
                         description=f"Send script to session {session_id}",
-                        dry_run=self.command_service.dry_run,
                     )
 
             return True
@@ -306,16 +267,16 @@ class TmuxTerminal(BaseTerminal):
         logger.debug("Listing all tmux panes")
 
         try:
-            result = run_command_r(
+            output = self.command_service.execute_r_with_output(
                 ["tmux", "list-panes", "-a", "-F", "#{pane_id}|#{pane_current_path}"],
                 description="List all tmux panes with working directories",
             )
 
-            if result.returncode != 0 or not result.stdout:
+            if not output:
                 return []
 
             sessions = []
-            for line in result.stdout.strip().split("\n"):
+            for line in output.split("\n"):
                 line = line.strip()
                 if line and "|" in line:
                     pane_id, path = line.split("|", 1)
@@ -413,13 +374,10 @@ class TmuxTerminal(BaseTerminal):
             return False
 
         try:
-            result = run_command_rw(
+            return self.command_service.execute_rw(
                 ["tmux", "send-keys", "-t", current_pane, command, "Enter"],
                 description=f"Send command to pane {current_pane}",
-                dry_run=self.command_service.dry_run,
             )
-
-            return result.returncode == 0
 
         except Exception as e:
             logger.error(f"Failed to run command in active pane: {e}")

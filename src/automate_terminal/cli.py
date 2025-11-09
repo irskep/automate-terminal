@@ -10,6 +10,7 @@ from pathlib import Path
 
 from automate_terminal import __version__
 from automate_terminal.applescript_service import AppleScriptService
+from automate_terminal.command_service import CommandService
 from automate_terminal.terminal_service import (
     EMPTY_CAPABILITIES,
     TerminalNotFoundError,
@@ -86,7 +87,8 @@ def _get_terminal_service(args) -> TerminalService | None:
     """
     try:
         dry_run = getattr(args, "dry_run", False)
-        applescript_service = AppleScriptService(dry_run=dry_run)
+        command_service = CommandService(dry_run=dry_run)
+        applescript_service = AppleScriptService(command_service)
         return TerminalService(applescript_service)
     except TerminalNotFoundError:
         output_error("Terminal not supported", args.output)

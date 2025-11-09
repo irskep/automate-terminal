@@ -44,10 +44,10 @@ def create_terminal_implementation(
     if override:
         logger.debug(f"Using AUTOMATE_TERMINAL_OVERRIDE={override}")
         override_map = {
-            "iterm2": ITerm2Terminal(applescript_service),
-            "terminal": TerminalAppTerminal(applescript_service),
-            "terminal.app": TerminalAppTerminal(applescript_service),
-            "ghostty": GhosttyMacTerminal(applescript_service),
+            "iterm2": ITerm2Terminal(applescript_service, command_service),
+            "terminal": TerminalAppTerminal(applescript_service, command_service),
+            "terminal.app": TerminalAppTerminal(applescript_service, command_service),
+            "ghostty": GhosttyMacTerminal(applescript_service, command_service),
             "tmux": TmuxTerminal(applescript_service, command_service),
             "vscode": VSCodeTerminal(
                 applescript_service, command_service, variant="vscode"
@@ -68,9 +68,9 @@ def create_terminal_implementation(
     # Cursor before VSCode since it's more specific (both use TERM_PROGRAM=vscode)
     terminals = [
         TmuxTerminal(applescript_service, command_service),
-        ITerm2Terminal(applescript_service),
-        TerminalAppTerminal(applescript_service),
-        GhosttyMacTerminal(applescript_service),
+        ITerm2Terminal(applescript_service, command_service),
+        TerminalAppTerminal(applescript_service, command_service),
+        GhosttyMacTerminal(applescript_service, command_service),
         VSCodeTerminal(applescript_service, command_service, variant="cursor"),
         VSCodeTerminal(applescript_service, command_service, variant="vscode"),
     ]

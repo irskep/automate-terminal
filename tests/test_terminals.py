@@ -28,10 +28,10 @@ from automate_terminal.terminals.vscode import VSCodeTerminal
     ],
 )
 def test_terminal_detect(
-    terminal_cls, term_program, platform, expected, fake_applescript
+    terminal_cls, term_program, platform, expected, fake_applescript, fake_command
 ):
     """Test terminal detection based on TERM_PROGRAM and platform."""
-    terminal = terminal_cls(fake_applescript)
+    terminal = terminal_cls(fake_applescript, fake_command)
     assert terminal.detect(term_program, platform) == expected
 
 
