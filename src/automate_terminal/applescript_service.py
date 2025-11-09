@@ -1,5 +1,3 @@
-"""AppleScript execution service with dry-run support."""
-
 import logging
 import platform
 from pathlib import Path
@@ -12,27 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class AppleScriptService:
-    """Service for executing AppleScript with optional dry-run mode."""
-
     def __init__(self, command_service: "CommandService"):
-        """Initialize AppleScript service.
-
-        Args:
-            command_service: Service for executing shell commands
-        """
         self.command_service = command_service
         self.dry_run = command_service.dry_run
         self.is_macos = platform.system() == "Darwin"
 
     def execute(self, script: str) -> bool:
-        """Execute AppleScript and return success status.
-
-        Args:
-            script: AppleScript code to execute
-
-        Returns:
-            True if successful (or in dry-run mode), False otherwise
-        """
         if not self.is_macos:
             logger.warning("AppleScript not available on this platform")
             return False
@@ -73,24 +56,5 @@ class AppleScriptService:
             description="Execute AppleScript for output",
         )
 
-    def escape_string(self, text: str) -> str:
-        """Escape text for use in AppleScript strings.
-
-        Args:
-            text: Text to escape
-
-        Returns:
-            Escaped text safe for AppleScript string literals
-        """
-        return text.replace("\\", "\\\\").replace('"', '\\"')
-
-    def escape_path(self, path: Path) -> str:
-        """Escape a path for use in AppleScript strings.
-
-        Args:
-            path: Path to escape
-
-        Returns:
-            Escaped path safe for AppleScript string literals
-        """
-        return str(path).replace("\\", "\\\\").replace('"', '\\"')
+    def escape(self, val: str | Path) -> str:
+        return str(val).replace("\\", "\\\\").replace('"', '\\"')

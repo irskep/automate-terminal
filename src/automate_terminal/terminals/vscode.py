@@ -6,6 +6,8 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+from automate_terminal.models import Capabilities
+
 from .base import BaseTerminal
 
 if TYPE_CHECKING:
@@ -18,12 +20,8 @@ VSCodeVariant = Literal["vscode", "cursor"]
 
 
 class VSCodeTerminal(BaseTerminal):
-    """VSCode/Cursor terminal implementation.
-
-    Uses CLI commands (code/cursor) to open or switch to workspace windows.
-    The CLI automatically switches to existing windows or opens new ones.
-    Can list open windows via AppleScript on macOS.
-    """
+    # Uses CLI commands (code/cursor) to open or switch to workspace windows.
+    # The CLI automatically switches to existing windows or opens new ones.
 
     def __init__(
         self,
@@ -31,24 +29,15 @@ class VSCodeTerminal(BaseTerminal):
         command_service: "CommandService",
         variant: VSCodeVariant = "vscode",
     ):
-        """Initialize VSCode terminal with specific variant.
-
-        Args:
-            applescript_service: Service for executing AppleScript
-            command_service: Service for executing shell commands
-            variant: Either "vscode" or "cursor"
-        """
         super().__init__(applescript_service, command_service)
         self.variant = variant
 
     @property
     def cli_command(self) -> str:
-        """CLI command name."""
         return "code" if self.variant == "vscode" else "cursor"
 
     @property
     def app_names(self) -> list[str]:
-        """Application process names for AppleScript detection on macOS."""
         if self.variant == "vscode":
             return ["Code", "Visual Studio Code"]
         else:
@@ -56,11 +45,9 @@ class VSCodeTerminal(BaseTerminal):
 
     @property
     def display_name(self) -> str:
-        """Human-readable name for logging and error messages."""
         return "VSCode" if self.variant == "vscode" else "Cursor"
 
     def detect(self, term_program: str | None, platform_name: str) -> bool:
-        """Detect if this editor variant is the current terminal."""
         # Both VSCode and Cursor set TERM_PROGRAM=vscode
         if term_program != "vscode":
             return False
@@ -74,19 +61,15 @@ class VSCodeTerminal(BaseTerminal):
             return has_cursor_id
 
     def _is_cli_available(self) -> bool:
-        """Check if the CLI command is available."""
         return shutil.which(self.cli_command) is not None
 
     def get_current_session_id(self) -> str | None:
-        """Editors don't provide session IDs."""
         return None
 
     def supports_session_management(self) -> bool:
-        """Can switch to windows via CLI."""
         return True
 
     def _run_cli(self, working_directory: Path) -> bool:
-        """Run the editor CLI to open or switch to a workspace."""
         if not self._is_cli_available():
             logger.error(
                 f"{self.cli_command} CLI not found. Install it via "
@@ -103,21 +86,23 @@ class VSCodeTerminal(BaseTerminal):
         )
 
     def list_sessions(self) -> list[dict[str, str]]:
-        """VSCode doesn't expose workspace paths via AppleScript."""
         return []
 
     def switch_to_session(
         self, session_id: str, session_init_script: str | None = None
     ) -> bool:
-        """Switch to window (CLI switches to existing or opens new)."""
+        return False
+
+    def switch_to_session_by_working_directory(
+        self, working_directory: Path, session_init_script: str | None = None
+    ) -> bool:
         if session_init_script:
             logger.warning(
                 f"{self.display_name} cannot execute init scripts in integrated terminal"
             )
 
         try:
-            workspace_path = Path(session_id)
-            return self._run_cli(workspace_path)
+            return self._run_cli(working_directory)
         except Exception as e:
             logger.error(f"Failed to switch to {self.display_name} window: {e}")
             return False
@@ -125,7 +110,6 @@ class VSCodeTerminal(BaseTerminal):
     def open_new_tab(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Editors don't support terminal tab creation."""
         logger.error(
             f"{self.display_name} does not support creating terminal tabs programmatically"
         )
@@ -134,29 +118,19 @@ class VSCodeTerminal(BaseTerminal):
     def open_new_window(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open window (CLI switches to existing or opens new)."""
         if session_init_script:
             logger.warning(f"{self.display_name} cannot execute init scripts via CLI")
 
         return self._run_cli(working_directory)
 
-    def _can_create_tabs(self) -> bool:
-        return False
-
-    def _can_create_windows(self) -> bool:
-        return True
-
-    def _can_list_sessions(self) -> bool:
-        return False
-
-    def _can_switch_to_session(self) -> bool:
-        return True
-
-    def _can_detect_session_id(self) -> bool:
-        return False
-
-    def _can_paste_commands(self) -> bool:
-        return False
-
-    def _can_switch_without_session_detection(self) -> bool:
-        return True
+    def get_capabilities(self) -> Capabilities:
+        return Capabilities(
+            can_create_tabs=False,
+            can_create_windows=True,
+            can_list_sessions=False,
+            can_switch_to_session=True,
+            can_detect_session_id=False,
+            can_detect_working_directory=False,
+            can_paste_commands=False,
+            can_run_in_active_session=False,
+        )

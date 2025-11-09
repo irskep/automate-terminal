@@ -16,19 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class BaseTerminal(ABC):
-    """Base class for terminal implementations."""
-
     def __init__(
         self,
         applescript_service: "AppleScriptService",
         command_service: "CommandService",
     ):
-        """Initialize terminal implementation.
-
-        Args:
-            applescript_service: Service for executing AppleScript
-            command_service: Service for executing shell commands
-        """
         self.applescript = applescript_service
         self.command_service = command_service
 
@@ -58,8 +50,18 @@ class BaseTerminal(ABC):
     def switch_to_session(
         self, session_id: str, session_init_script: str | None = None
     ) -> bool:
-        """Switch to existing session if supported."""
+        """Switch to existing session by session ID if supported."""
         pass
+
+    def switch_to_session_by_working_directory(
+        self, working_directory: Path, session_init_script: str | None = None
+    ) -> bool:
+        """Switch to existing session by working directory if supported.
+
+        This is for terminals that can switch to sessions by working directory
+        without needing a session ID (like Terminal.app).
+        """
+        return False
 
     @abstractmethod
     def open_new_tab(
@@ -102,6 +104,10 @@ class BaseTerminal(ABC):
         """
         return None
 
+    def run_in_active_session(self, command: str) -> bool:
+        """Run a command in the current active terminal session."""
+        return False
+
     def get_shell_name(self) -> str | None:
         """Get the name of the current shell (e.g., 'zsh', 'bash', 'fish')."""
         shell_path = os.environ.get("SHELL", "")
@@ -109,72 +115,7 @@ class BaseTerminal(ABC):
             return os.path.basename(shell_path)
         return None
 
+    @abstractmethod
     def get_capabilities(self) -> Capabilities:
         """Return capabilities this terminal supports."""
-        return Capabilities(
-            can_create_tabs=self._can_create_tabs(),
-            can_create_windows=self._can_create_windows(),
-            can_list_sessions=self._can_list_sessions(),
-            can_switch_to_session=self._can_switch_to_session(),
-            can_detect_session_id=self._can_detect_session_id(),
-            can_detect_working_directory=self._can_detect_working_directory(),
-            can_paste_commands=self._can_paste_commands(),
-            can_run_in_active_session=self._can_run_in_active_session(),
-        )
-
-    def _can_create_tabs(self) -> bool:
-        """Override in subclass to indicate tab creation support."""
-        return False
-
-    def _can_create_windows(self) -> bool:
-        """Override in subclass to indicate window creation support."""
-        return False
-
-    def _can_list_sessions(self) -> bool:
-        """Override in subclass to indicate session listing support."""
-        return False
-
-    def _can_switch_to_session(self) -> bool:
-        """Override in subclass to indicate session switching support."""
-        return False
-
-    def _can_detect_session_id(self) -> bool:
-        """Override in subclass to indicate session ID detection support."""
-        return False
-
-    def _can_detect_working_directory(self) -> bool:
-        """Override in subclass to indicate working directory detection support.
-
-        This means: can determine which sessions/tabs/windows are in which directories.
-        Not just "can get current working directory from environment".
-        """
-        return False
-
-    def _can_paste_commands(self) -> bool:
-        """Override in subclass to indicate command pasting support."""
-        return False
-
-    def _can_switch_without_session_detection(self) -> bool:
-        """Whether switch_to_session can work without finding session first.
-
-        True for terminals like VSCode where switch_to_session(path) works
-        even if find_session_by_working_directory returns None.
-
-        Default: False (requires session detection before switching)
-        """
-        return False
-
-    def _can_run_in_active_session(self) -> bool:
-        """Override in subclass to indicate run in active session support."""
-        return False
-
-    def run_in_active_session(self, command: str) -> bool:
-        """Run a command in the current active terminal session.
-
-        Args:
-            command: Shell command to execute
-
-        Returns:
-            True if command was sent successfully, False otherwise
-        """
-        return False
+        pass

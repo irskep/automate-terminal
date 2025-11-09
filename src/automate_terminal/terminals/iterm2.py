@@ -4,34 +4,30 @@ import logging
 import os
 from pathlib import Path
 
+from automate_terminal.models import Capabilities
+
 from .base import BaseTerminal
 
 logger = logging.getLogger(__name__)
 
 
 class ITerm2Terminal(BaseTerminal):
-    """iTerm2 terminal implementation."""
-
     @property
     def display_name(self) -> str:
         return "iTerm2"
 
     def detect(self, term_program: str | None, platform_name: str) -> bool:
-        """Detect if iTerm2 is the current terminal."""
         return platform_name == "Darwin" and term_program == "iTerm.app"
 
     def get_current_session_id(self) -> str | None:
-        """Get current iTerm2 session ID."""
         session_id = os.getenv("ITERM_SESSION_ID")
         logger.debug(f"Current iTerm2 session ID: {session_id}")
         return session_id
 
     def supports_session_management(self) -> bool:
-        """iTerm2 supports session management."""
         return True
 
     def session_exists(self, session_id: str) -> bool:
-        """Check if a session exists in iTerm2."""
         if not session_id:
             return False
 
@@ -58,7 +54,6 @@ class ITerm2Terminal(BaseTerminal):
         return result == "true" if result else False
 
     def session_in_directory(self, session_id: str, directory: Path) -> bool:
-        """Check if iTerm2 session exists and is in the specified directory."""
         if not session_id:
             return False
 
@@ -73,7 +68,7 @@ class ITerm2Terminal(BaseTerminal):
                     repeat with theSession in sessions of theTab
                         if id of theSession is "{session_uuid}" then
                             set currentDirectory to get variable named "PWD" of theSession
-                            if currentDirectory starts with "{self.applescript.escape_string(str(directory))}" then
+                            if currentDirectory starts with "{self.applescript.escape(str(directory))}" then
                                 return true
                             else
                                 return false
@@ -92,7 +87,6 @@ class ITerm2Terminal(BaseTerminal):
     def switch_to_session(
         self, session_id: str, session_init_script: str | None = None
     ) -> bool:
-        """Switch to an existing iTerm2 session."""
         logger.debug(f"Switching to iTerm2 session: {session_id}")
 
         # Extract UUID part from session ID (format: w0t0p2:UUID)
@@ -111,7 +105,7 @@ class ITerm2Terminal(BaseTerminal):
         if session_init_script:
             applescript += f"""
                             tell theSession
-                                write text "{self.applescript.escape_string(session_init_script)}"
+                                write text "{self.applescript.escape(session_init_script)}"
                             end tell"""
 
         applescript += """
@@ -128,10 +122,9 @@ class ITerm2Terminal(BaseTerminal):
     def open_new_tab(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open a new iTerm2 tab."""
         logger.debug(f"Opening new iTerm2 tab for {working_directory}")
 
-        commands = [f"cd {self.applescript.escape_path(working_directory)}"]
+        commands = [f"cd {self.applescript.escape(working_directory)}"]
 
         if session_init_script:
             commands.append(session_init_script)
@@ -152,10 +145,9 @@ class ITerm2Terminal(BaseTerminal):
     def open_new_window(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
-        """Open a new iTerm2 window."""
         logger.debug(f"Opening new iTerm2 window for {working_directory}")
 
-        commands = [f"cd {self.applescript.escape_path(working_directory)}"]
+        commands = [f"cd {self.applescript.escape(working_directory)}"]
         if session_init_script:
             commands.append(session_init_script)
 
@@ -171,7 +163,6 @@ class ITerm2Terminal(BaseTerminal):
         return self.applescript.execute(applescript)
 
     def list_sessions(self) -> list[dict[str, str]]:
-        """List all iTerm2 sessions with their working directories."""
         applescript = """
         tell application "iTerm2"
             set sessionData to ""
@@ -220,9 +211,8 @@ class ITerm2Terminal(BaseTerminal):
     def find_session_by_working_directory(
         self, target_path: str, subdirectory_ok: bool = False
     ) -> str | None:
-        """Find a session ID that matches the given working directory."""
         sessions = self.list_sessions()
-        target_path = str(Path(target_path).resolve())  # Normalize path
+        target_path = str(Path(target_path).resolve())
 
         for session in sessions:
             session_path = str(Path(session["working_directory"]).resolve())
@@ -237,38 +227,25 @@ class ITerm2Terminal(BaseTerminal):
 
         return None
 
-    def _can_create_tabs(self) -> bool:
-        return True
-
-    def _can_create_windows(self) -> bool:
-        return True
-
-    def _can_list_sessions(self) -> bool:
-        return True
-
-    def _can_switch_to_session(self) -> bool:
-        return True
-
-    def _can_detect_session_id(self) -> bool:
-        return True
-
-    def _can_detect_working_directory(self) -> bool:
-        return True
-
-    def _can_paste_commands(self) -> bool:
-        return True
-
-    def _can_run_in_active_session(self) -> bool:
-        return True
+    def get_capabilities(self) -> Capabilities:
+        return Capabilities(
+            can_create_tabs=True,
+            can_create_windows=True,
+            can_list_sessions=True,
+            can_switch_to_session=True,
+            can_detect_session_id=True,
+            can_detect_working_directory=True,
+            can_paste_commands=True,
+            can_run_in_active_session=True,
+        )
 
     def run_in_active_session(self, command: str) -> bool:
-        """Run a command in the current active iTerm2 session."""
         logger.debug(f"Running command in active iTerm2 session: {command}")
 
         applescript = f"""
         tell application "iTerm2"
             tell current session of current window
-                write text "{self.applescript.escape_string(command)}"
+                write text "{self.applescript.escape(command)}"
             end tell
         end tell
         """
