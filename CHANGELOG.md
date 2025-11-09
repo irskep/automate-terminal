@@ -6,6 +6,9 @@
 
 ### Added
 
+- VSCode and Cursor terminal support
+- `paste_script_executed` field in JSON output to indicate whether paste scripts were executed (since VSCode and Cursor can't do this)
+
 ### Changed
 
 ### Fixed
