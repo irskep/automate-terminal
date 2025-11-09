@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 
+from automate_terminal.models import Capabilities
+
 from .base import BaseTerminal
 
 logger = logging.getLogger(__name__)
@@ -338,37 +340,17 @@ class WeztermTerminal(BaseTerminal):
 
         return None
 
-    def _can_create_tabs(self) -> bool:
-        """WezTerm can create tabs."""
-        return True
-
-    def _can_create_windows(self) -> bool:
-        """WezTerm can create windows."""
-        return True
-
-    def _can_list_sessions(self) -> bool:
-        """WezTerm can list all panes."""
-        return True
-
-    def _can_switch_to_session(self) -> bool:
-        """WezTerm can switch to panes."""
-        return True
-
-    def _can_detect_session_id(self) -> bool:
-        """WezTerm provides WEZTERM_PANE for session identification."""
-        return True
-
-    def _can_detect_working_directory(self) -> bool:
-        """WezTerm can detect working directory of panes."""
-        return True
-
-    def _can_paste_commands(self) -> bool:
-        """WezTerm can send commands to panes."""
-        return True
-
-    def _can_run_in_active_session(self) -> bool:
-        """WezTerm can run commands in the active pane."""
-        return True
+    def get_capabilities(self) -> Capabilities:
+        return Capabilities(
+            can_create_tabs=True,
+            can_create_windows=True,
+            can_list_sessions=True,
+            can_switch_to_session=True,
+            can_detect_session_id=True,
+            can_detect_working_directory=True,
+            can_paste_commands=True,
+            can_run_in_active_session=True,
+        )
 
     def run_in_active_session(self, command: str) -> bool:
         """Run a command in the current active WezTerm pane.

@@ -6,6 +6,8 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+from automate_terminal.models import Capabilities
+
 from .base import BaseTerminal
 
 if TYPE_CHECKING:
@@ -145,20 +147,14 @@ class VSCodeTerminal(BaseTerminal):
 
         return self._run_cli(working_directory)
 
-    def _can_create_tabs(self) -> bool:
-        return False
-
-    def _can_create_windows(self) -> bool:
-        return True
-
-    def _can_list_sessions(self) -> bool:
-        return False
-
-    def _can_switch_to_session(self) -> bool:
-        return True  # Can switch by working directory via CLI
-
-    def _can_detect_session_id(self) -> bool:
-        return False
-
-    def _can_paste_commands(self) -> bool:
-        return False
+    def get_capabilities(self) -> Capabilities:
+        return Capabilities(
+            can_create_tabs=False,
+            can_create_windows=True,
+            can_list_sessions=False,
+            can_switch_to_session=True,
+            can_detect_session_id=False,
+            can_detect_working_directory=False,
+            can_paste_commands=False,
+            can_run_in_active_session=False,
+        )

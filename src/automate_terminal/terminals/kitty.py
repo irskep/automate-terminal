@@ -5,6 +5,8 @@ import logging
 import os
 from pathlib import Path
 
+from automate_terminal.models import Capabilities
+
 from .base import BaseTerminal
 
 logger = logging.getLogger(__name__)
@@ -313,37 +315,17 @@ class KittyTerminal(BaseTerminal):
 
         return None
 
-    def _can_create_tabs(self) -> bool:
-        """Kitty can create tabs."""
-        return True
-
-    def _can_create_windows(self) -> bool:
-        """Kitty can create OS windows."""
-        return True
-
-    def _can_list_sessions(self) -> bool:
-        """Kitty can list all windows."""
-        return True
-
-    def _can_switch_to_session(self) -> bool:
-        """Kitty can switch to windows."""
-        return True
-
-    def _can_detect_session_id(self) -> bool:
-        """Kitty provides KITTY_WINDOW_ID for session identification."""
-        return True
-
-    def _can_detect_working_directory(self) -> bool:
-        """Kitty can detect working directory of windows."""
-        return True
-
-    def _can_paste_commands(self) -> bool:
-        """Kitty can send commands to windows."""
-        return True
-
-    def _can_run_in_active_session(self) -> bool:
-        """Kitty can run commands in the active window."""
-        return True
+    def get_capabilities(self) -> Capabilities:
+        return Capabilities(
+            can_create_tabs=True,
+            can_create_windows=True,
+            can_list_sessions=True,
+            can_switch_to_session=True,
+            can_detect_session_id=True,
+            can_detect_working_directory=True,
+            can_paste_commands=True,
+            can_run_in_active_session=True,
+        )
 
     def run_in_active_session(self, command: str) -> bool:
         """Run a command in the current active Kitty window.

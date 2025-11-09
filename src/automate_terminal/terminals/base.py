@@ -115,47 +115,7 @@ class BaseTerminal(ABC):
             return os.path.basename(shell_path)
         return None
 
+    @abstractmethod
     def get_capabilities(self) -> Capabilities:
         """Return capabilities this terminal supports."""
-        return Capabilities(
-            can_create_tabs=self._can_create_tabs(),
-            can_create_windows=self._can_create_windows(),
-            can_list_sessions=self._can_list_sessions(),
-            can_switch_to_session=self._can_switch_to_session(),
-            can_detect_session_id=self._can_detect_session_id(),
-            can_detect_working_directory=self._can_detect_working_directory(),
-            can_paste_commands=self._can_paste_commands(),
-            can_run_in_active_session=self._can_run_in_active_session(),
-        )
-
-    def _can_create_tabs(self) -> bool:
-        """Whether creating tabs is supported"""
-        return False
-
-    def _can_create_windows(self) -> bool:
-        """Whether creating windows is supported"""
-        return False
-
-    def _can_list_sessions(self) -> bool:
-        """Whether we can list all sessions with their working directories"""
-        return False
-
-    def _can_switch_to_session(self) -> bool:
-        """Whether we are able to switch to a specific session by ID or by working directory"""
-        return False
-
-    def _can_detect_session_id(self) -> bool:
-        """Whether we can determine a unique ID for a given session, other than working directory"""
-        return False
-
-    def _can_detect_working_directory(self) -> bool:
-        """Whether we can figure out which session responds to a given working directory"""
-        return False
-
-    def _can_paste_commands(self) -> bool:
-        """Whether we can insert text into new sessions."""
-        return False
-
-    def _can_run_in_active_session(self) -> bool:
-        """Whether we can insert text into the user's current session."""
-        return False
+        pass

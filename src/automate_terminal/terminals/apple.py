@@ -4,6 +4,8 @@ import logging
 import shlex
 from pathlib import Path
 
+from automate_terminal.models import Capabilities
+
 from .base import BaseTerminal
 
 logger = logging.getLogger(__name__)
@@ -284,29 +286,17 @@ class TerminalAppTerminal(BaseTerminal):
         """
         return None
 
-    def _can_create_tabs(self) -> bool:
-        return True
-
-    def _can_create_windows(self) -> bool:
-        return True
-
-    def _can_list_sessions(self) -> bool:
-        return True
-
-    def _can_switch_to_session(self) -> bool:
-        return True  # Can switch by working directory
-
-    def _can_detect_session_id(self) -> bool:
-        return False  # Terminal.app doesn't have session IDs
-
-    def _can_detect_working_directory(self) -> bool:
-        return True
-
-    def _can_paste_commands(self) -> bool:
-        return True
-
-    def _can_run_in_active_session(self) -> bool:
-        return True
+    def get_capabilities(self) -> Capabilities:
+        return Capabilities(
+            can_create_tabs=True,
+            can_create_windows=True,
+            can_list_sessions=True,
+            can_switch_to_session=True,
+            can_detect_session_id=False,
+            can_detect_working_directory=True,
+            can_paste_commands=True,
+            can_run_in_active_session=True,
+        )
 
     def run_in_active_session(self, command: str) -> bool:
         """Run a command in the current active Terminal.app session."""
