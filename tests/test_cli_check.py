@@ -18,6 +18,7 @@ def test_cmd_check_success(mock_args, capsys):
         can_detect_session_id=True,
         can_detect_working_directory=True,
         can_paste_commands=True,
+        can_run_in_active_session=True,
     )
 
     # Mock TerminalService to return our fake
@@ -67,6 +68,7 @@ def test_cmd_check_text_output(mock_args, capsys):
         can_detect_session_id=False,
         can_detect_working_directory=True,
         can_paste_commands=False,
+        can_run_in_active_session=False,
     )
 
     with patch("automate_terminal.cli.TerminalService") as mock_service:

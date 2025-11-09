@@ -11,7 +11,8 @@ from automate_terminal.models import Capabilities
 class FakeAppleScriptService:
     """Fake AppleScript service for testing."""
 
-    def __init__(self, dry_run=False, is_macos=True):
+    def __init__(self, command_service=None, dry_run=False, is_macos=True):
+        self.command_service = command_service or FakeCommandService(dry_run=dry_run)
         self.dry_run = dry_run
         self.is_macos = is_macos
         self.executed_scripts = []
@@ -27,19 +28,45 @@ class FakeAppleScriptService:
         self.executed_scripts.append(("execute_with_result", script))
         return self.result_to_return
 
+    def escape_string(self, text: str) -> str:
+        """Escape text for AppleScript."""
+        return text.replace("\\", "\\\\").replace('"', '\\"')
+
+    def escape_path(self, path) -> str:
+        """Escape path for AppleScript."""
+        return str(path).replace("\\", "\\\\").replace('"', '\\"')
+
 
 class FakeCommandService:
     """Fake command service for testing."""
 
-    def __init__(self):
+    def __init__(self, dry_run=False):
+        self.dry_run = dry_run
         self.executed_commands = []
         self.return_value = True
+        self.return_output = None
 
-    def execute(
+    def execute_r(
         self, cmd: list[str], timeout: int = 10, description: str | None = None
     ) -> bool:
-        """Record command execution, return configured value."""
-        self.executed_commands.append((cmd, timeout, description))
+        """Record read-only command execution, return configured value."""
+        self.executed_commands.append(("execute_r", cmd, timeout, description))
+        return self.return_value
+
+    def execute_r_with_output(
+        self, cmd: list[str], timeout: int = 10, description: str | None = None
+    ) -> str | None:
+        """Record read-only command execution with output, return configured output."""
+        self.executed_commands.append(
+            ("execute_r_with_output", cmd, timeout, description)
+        )
+        return self.return_output
+
+    def execute_rw(
+        self, cmd: list[str], timeout: int = 10, description: str | None = None
+    ) -> bool:
+        """Record read-write command execution, return configured value."""
+        self.executed_commands.append(("execute_rw", cmd, timeout, description))
         return self.return_value
 
 

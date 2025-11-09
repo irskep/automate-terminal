@@ -38,8 +38,7 @@ class VSCodeTerminal(BaseTerminal):
             command_service: Service for executing shell commands
             variant: Either "vscode" or "cursor"
         """
-        super().__init__(applescript_service)
-        self.command_service = command_service
+        super().__init__(applescript_service, command_service)
         self.variant = variant
 
     @property
@@ -97,7 +96,7 @@ class VSCodeTerminal(BaseTerminal):
 
         # Without -n flag, CLI switches to existing window or opens new one
         cmd = [self.cli_command, str(working_directory)]
-        return self.command_service.execute(
+        return self.command_service.execute_rw(
             cmd,
             timeout=10,
             description=f"Open/switch {self.display_name} window",

@@ -1,6 +1,8 @@
 # automate-terminal
 
-Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, Ghostty, Cursor, and Visual Studio Code on macOS, with additional terminals and OSes added by request.
+Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, Ghostty, tmux, Cursor, and Visual Studio Code.
+
+Most terminals are macOS-only, but **tmux works cross-platform** (macOS, Linux, BSD, etc.) and has full feature support.
 
 automate-terminal is a best-effort project. Some terminals do not support automation at all! It's also intended to be used as a component in other tools, so it errs on the side of strictness over fallbacks. See command reference for details.
 
@@ -16,15 +18,18 @@ mise install pip:automate-terminal
 
 ## Supported Terminals
 
-| Terminal     | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands | Run in Active Session |
-| ------------ | ---------------- | ------------ | --------------------- | ------------- | -------------- | --------------------- |
-| iTerm2       | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
-| Terminal.app | ✅               | ❌           | ✅                    | ✅            | ✅             | ✅                    |
-| Ghostty      | ✅               | ❌           | ❌                    | ❌            | ✅             | ✅                    |
-| VSCode       | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
-| Cursor       | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
+| Terminal     | Platform           | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands | Run in Active Session |
+| ------------ | ------------------ | ---------------- | ------------ | --------------------- | ------------- | -------------- | --------------------- |
+| iTerm2       | macOS              | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
+| Terminal.app | macOS              | ✅               | ❌           | ✅                    | ✅            | ✅             | ✅                    |
+| Ghostty      | macOS              | ✅               | ❌           | ❌                    | ❌            | ✅             | ✅                    |
+| **tmux**     | **Cross-platform** | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
+| VSCode       | Cross-platform     | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
+| Cursor       | Cross-platform     | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
 
-Other terminals are not supported; `automate-terminal` will exit with an error code in other terminals.
+**Linux/BSD users:** Use tmux for full automation support on non-macOS platforms.
+
+Other terminals are not supported; `automate-terminal` will exit with an error code in unsupported terminals.
 
 ## Quick Start
 
@@ -64,11 +69,11 @@ Within terminal emulators, a _session_ is, for the purposes of this project, one
 
 In **many different ways**, which is why this problem is complex enough to warrant a library! The ability to open a new tab or window, or switch to a specific existing session based on some criteria, is not standardized _at all_ among terminal emulators. The spread of what is possible for a given terminal emulator is incredibly wide, as shown by the table at the top of this README.
 
-The primary way of controlling terminal emulator GUI apps on macOS is AppleScript, which is how `automate-terminal` mostly operates. iTerm2, for example, has a comprehensive AppleScript API, which is why it has the best support. Ghostty, on the other hand, has _no_ AppleScript API at all, so `automate-terminal` uses the `SystemEvents` API to "click" its menu items, and we have no way of knowing which Ghostty tab is in a particular working directory. VSCode also has no AppleScript API, and no way to insert terminal content even, but it does have its `code <path>` command to open or switch to a specific window.
+macOS terminals are primarily controlled via AppleScript. iTerm2, for example, has a comprehensive AppleScript API, which is why it has the best support. Ghostty has _no_ AppleScript API at all, so `automate-terminal` uses the `SystemEvents` API to "click" its menu items, and we have no way of knowing which Ghostty tab is in a particular working directory. VSCode also has no AppleScript API, but it does have its `code <path>` command to open or switch to a specific window.
 
-All this is to say, if you are unhappy with the level of automation provided by `automate-terminal`, switch to iTerm2 or lobby your terminal emulator authors to add AppleScript support.
+**tmux** uses its native CLI commands (`tmux list-panes`, `tmux select-window`, `tmux send-keys`, etc.) and works identically across all platforms where tmux is available.
 
-Linux and Windows users, please educate me in the GitHub discussions!
+All this is to say, if you are unhappy with the level of automation provided by `automate-terminal` on macOS, switch to iTerm2 or lobby your terminal emulator authors to add AppleScript support. **On Linux/BSD, use tmux for full automation support.**
 
 ## Commands
 
@@ -205,7 +210,7 @@ Shell-specific flags override generic `--paste-and-run` when detected shell matc
 --dry-run   # Log actions instead of executing them
 ```
 
-Use `--dry-run` to see what AppleScript commands would be executed without actually running them. Useful for debugging and understanding what the tool will do.
+Use `--dry-run` to see what commands would be executed without actually running them (AppleScript for macOS terminals, tmux CLI commands for tmux). Useful for debugging and understanding what the tool will do.
 
 ### Python API
 

@@ -138,6 +138,7 @@ def test_will_paste_script_execute_returns_none_when_no_script():
                 can_detect_session_id=True,
                 can_detect_working_directory=True,
                 can_paste_commands=True,
+                can_run_in_active_session=True,
             )
 
     result = will_paste_script_execute(None, FakeService())
@@ -157,6 +158,7 @@ def test_will_paste_script_execute_returns_true_when_supported():
                 can_detect_session_id=True,
                 can_detect_working_directory=True,
                 can_paste_commands=True,
+                can_run_in_active_session=True,
             )
 
     result = will_paste_script_execute("echo hello", FakeService())
@@ -176,6 +178,7 @@ def test_will_paste_script_execute_returns_false_when_not_supported():
                 can_detect_session_id=False,
                 can_detect_working_directory=True,
                 can_paste_commands=False,  # VSCode/Cursor case
+                can_run_in_active_session=False,
             )
 
     result = will_paste_script_execute("echo hello", FakeService())

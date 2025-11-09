@@ -4,8 +4,6 @@ import logging
 import shlex
 from pathlib import Path
 
-from automate_terminal.utils import run_command
-
 from .base import BaseTerminal
 
 logger = logging.getLogger(__name__)
@@ -65,29 +63,24 @@ class TerminalAppTerminal(BaseTerminal):
         try:
             # Find shell process for this TTY
             shell_cmd = f"lsof {shlex.quote(tty)} | grep -E '(zsh|bash|sh)' | head -1 | awk '{{print $2}}'"
-            shell_result = run_command(
+            pid = self.command_service.execute_r_with_output(
                 ["bash", "-c", shell_cmd],
                 timeout=5,
                 description=f"Find shell process for TTY {tty}",
             )
 
-            if shell_result.returncode != 0 or not shell_result.stdout.strip():
+            if not pid:
                 return None
-
-            pid = shell_result.stdout.strip()
 
             # Get working directory of that process
             cwd_cmd = f"lsof -p {shlex.quote(pid)} | grep cwd | awk '{{print $9}}'"
-            cwd_result = run_command(
+            cwd = self.command_service.execute_r_with_output(
                 ["bash", "-c", cwd_cmd],
                 timeout=5,
                 description=f"Get working directory for PID {pid}",
             )
 
-            if cwd_result.returncode == 0 and cwd_result.stdout.strip():
-                return cwd_result.stdout.strip()
-
-            return None
+            return cwd if cwd else None
 
         except Exception as e:
             logger.debug(f"Failed to get working directory from TTY {tty}: {e}")
@@ -213,12 +206,12 @@ class TerminalAppTerminal(BaseTerminal):
         """
 
         try:
-            result = run_command(
+            result = self.command_service.execute_r_with_output(
                 ["osascript", "-e", check_windows_script],
                 timeout=5,
                 description="Check Terminal windows",
             )
-            window_count = int(result.stdout.strip()) if result.returncode == 0 else 0
+            window_count = int(result) if result else 0
         except Exception:
             window_count = 0
 

@@ -25,7 +25,9 @@ from .models import Capabilities
 from .terminal_service import TerminalService
 
 
-def _get_terminal_service(dry_run: bool = False, debug: bool = False) -> TerminalService:
+def _get_terminal_service(
+    dry_run: bool = False, debug: bool = False
+) -> TerminalService:
     """
     Create and return a TerminalService instance.
 
@@ -99,7 +101,9 @@ def new_tab(
     """
     service = _get_terminal_service(dry_run=dry_run, debug=debug)
     working_directory = Path(working_directory)
-    return service.new_tab(working_directory=working_directory, paste_script=paste_script)
+    return service.new_tab(
+        working_directory=working_directory, paste_script=paste_script
+    )
 
 
 def new_window(
@@ -129,7 +133,9 @@ def new_window(
     """
     service = _get_terminal_service(dry_run=dry_run, debug=debug)
     working_directory = Path(working_directory)
-    return service.new_window(working_directory=working_directory, paste_script=paste_script)
+    return service.new_window(
+        working_directory=working_directory, paste_script=paste_script
+    )
 
 
 def switch_to_session(

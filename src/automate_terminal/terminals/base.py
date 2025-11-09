@@ -10,6 +10,7 @@ from automate_terminal.models import Capabilities
 
 if TYPE_CHECKING:
     from automate_terminal.applescript_service import AppleScriptService
+    from automate_terminal.command_service import CommandService
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +18,19 @@ logger = logging.getLogger(__name__)
 class BaseTerminal(ABC):
     """Base class for terminal implementations."""
 
-    def __init__(self, applescript_service: "AppleScriptService"):
+    def __init__(
+        self,
+        applescript_service: "AppleScriptService",
+        command_service: "CommandService",
+    ):
         """Initialize terminal implementation.
 
         Args:
             applescript_service: Service for executing AppleScript
+            command_service: Service for executing shell commands
         """
         self.applescript = applescript_service
+        self.command_service = command_service
 
     @property
     def display_name(self) -> str:

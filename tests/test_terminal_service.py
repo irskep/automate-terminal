@@ -54,6 +54,7 @@ def test_terminal_service_delegates_to_terminal(fake_applescript):
             can_detect_session_id=True,
             can_detect_working_directory=True,
             can_paste_commands=True,
+            can_run_in_active_session=True,
         ),
     )
 
@@ -79,6 +80,7 @@ def test_terminal_service_new_tab_checks_capability(fake_applescript):
             can_detect_session_id=False,
             can_detect_working_directory=True,
             can_paste_commands=False,
+            can_run_in_active_session=False,
         ),
     )
 
@@ -103,6 +105,7 @@ def test_terminal_service_new_window_checks_capability(fake_applescript):
             can_detect_session_id=False,
             can_detect_working_directory=True,
             can_paste_commands=False,
+            can_run_in_active_session=False,
         ),
     )
 

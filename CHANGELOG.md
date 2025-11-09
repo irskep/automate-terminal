@@ -6,6 +6,11 @@
 
 ### Added
 
+- tmux terminal support
+  - Full support for all capabilities: create tabs/windows, switch by ID or directory, list sessions, paste commands, run in active session
+  - Uses `$TMUX_PANE` for session identification
+  - Works cross-platform (macOS, Linux, etc.)
+
 ### Changed
 
 ### Fixed

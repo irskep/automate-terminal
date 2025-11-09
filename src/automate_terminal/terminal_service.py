@@ -12,6 +12,7 @@ from automate_terminal.terminals.apple import TerminalAppTerminal
 from automate_terminal.terminals.base import BaseTerminal
 from automate_terminal.terminals.ghostty import GhosttyMacTerminal
 from automate_terminal.terminals.iterm2 import ITerm2Terminal
+from automate_terminal.terminals.tmux import TmuxTerminal
 from automate_terminal.terminals.vscode import VSCodeTerminal
 
 logger = logging.getLogger(__name__)
@@ -35,17 +36,19 @@ def create_terminal_implementation(
     applescript_service: AppleScriptService,
 ) -> BaseTerminal | None:
     """Create the appropriate terminal implementation."""
-    command_service = CommandService()
+    # Create command service with same dry_run setting as applescript service
+    command_service = CommandService(dry_run=applescript_service.dry_run)
 
     # Check for override environment variable
     override = os.getenv("AUTOMATE_TERMINAL_OVERRIDE")
     if override:
         logger.debug(f"Using AUTOMATE_TERMINAL_OVERRIDE={override}")
         override_map = {
-            "iterm2": ITerm2Terminal(applescript_service),
-            "terminal": TerminalAppTerminal(applescript_service),
-            "terminal.app": TerminalAppTerminal(applescript_service),
-            "ghostty": GhosttyMacTerminal(applescript_service),
+            "iterm2": ITerm2Terminal(applescript_service, command_service),
+            "terminal": TerminalAppTerminal(applescript_service, command_service),
+            "terminal.app": TerminalAppTerminal(applescript_service, command_service),
+            "ghostty": GhosttyMacTerminal(applescript_service, command_service),
+            "tmux": TmuxTerminal(applescript_service, command_service),
             "vscode": VSCodeTerminal(
                 applescript_service, command_service, variant="vscode"
             ),
@@ -61,11 +64,13 @@ def create_terminal_implementation(
             logger.warning(f"Unknown AUTOMATE_TERMINAL_OVERRIDE value: {override}")
 
     # Ordered list of terminal implementations to try
+    # tmux first since it can be running inside any other terminal
     # Cursor before VSCode since it's more specific (both use TERM_PROGRAM=vscode)
     terminals = [
-        ITerm2Terminal(applescript_service),
-        TerminalAppTerminal(applescript_service),
-        GhosttyMacTerminal(applescript_service),
+        TmuxTerminal(applescript_service, command_service),
+        ITerm2Terminal(applescript_service, command_service),
+        TerminalAppTerminal(applescript_service, command_service),
+        GhosttyMacTerminal(applescript_service, command_service),
         VSCodeTerminal(applescript_service, command_service, variant="cursor"),
         VSCodeTerminal(applescript_service, command_service, variant="vscode"),
     ]
@@ -244,6 +249,8 @@ class TerminalService:
             True if command was sent successfully, False otherwise
         """
         if not self.terminal.get_capabilities().can_run_in_active_session:
-            raise RuntimeError("Terminal does not support running commands in active session")
+            raise RuntimeError(
+                "Terminal does not support running commands in active session"
+            )
 
         return self.terminal.run_in_active_session(command)
