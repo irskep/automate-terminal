@@ -109,15 +109,20 @@ class VSCodeTerminal(BaseTerminal):
     def switch_to_session(
         self, session_id: str, session_init_script: str | None = None
     ) -> bool:
-        """Switch to window (CLI switches to existing or opens new)."""
+        """VSCode doesn't have session IDs."""
+        return False
+
+    def switch_to_session_by_working_directory(
+        self, working_directory: Path, session_init_script: str | None = None
+    ) -> bool:
+        """Switch to window by working directory (CLI switches to existing or opens new)."""
         if session_init_script:
             logger.warning(
                 f"{self.display_name} cannot execute init scripts in integrated terminal"
             )
 
         try:
-            workspace_path = Path(session_id)
-            return self._run_cli(workspace_path)
+            return self._run_cli(working_directory)
         except Exception as e:
             logger.error(f"Failed to switch to {self.display_name} window: {e}")
             return False
@@ -150,13 +155,10 @@ class VSCodeTerminal(BaseTerminal):
         return False
 
     def _can_switch_to_session(self) -> bool:
-        return True
+        return True  # Can switch by working directory via CLI
 
     def _can_detect_session_id(self) -> bool:
         return False
 
     def _can_paste_commands(self) -> bool:
         return False
-
-    def _can_switch_without_session_detection(self) -> bool:
-        return True

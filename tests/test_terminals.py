@@ -142,8 +142,8 @@ def test_vscode_terminal_capabilities(fake_applescript, fake_command):
     assert caps.can_create_tabs is False
     assert caps.can_create_windows is True
     assert caps.can_list_sessions is False  # VSCode doesn't expose workspace paths
-    assert caps.can_switch_to_session is True  # CLI works everywhere
-    assert caps.can_detect_session_id is False
+    assert caps.can_switch_to_session is True  # Can switch by working directory via CLI
+    assert caps.can_detect_session_id is False  # No session IDs
     assert caps.can_paste_commands is False
 
 

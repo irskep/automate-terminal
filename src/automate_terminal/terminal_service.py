@@ -145,20 +145,20 @@ class TerminalService:
         paste_script: str | None = None,
         subdirectory_ok: bool = False,
     ) -> bool:
+        # First try to find a session ID by working directory
         session_id = self.terminal.find_session_by_working_directory(
             str(working_directory), subdirectory_ok=subdirectory_ok
         )
 
-        if not session_id:
-            # For terminals that can switch without session detection,
-            # try switching with the path directly
-            if self.terminal._can_switch_without_session_detection():
-                return self.terminal.switch_to_session(
-                    str(working_directory), paste_script
-                )
-            return False
+        if session_id:
+            # If we found a session ID, use it
+            return self.terminal.switch_to_session(session_id, paste_script)
 
-        return self.terminal.switch_to_session(session_id, paste_script)
+        # Otherwise try switching directly by working directory
+        # (for terminals like Terminal.app that don't have session IDs)
+        return self.terminal.switch_to_session_by_working_directory(
+            working_directory, paste_script
+        )
 
     def switch_to_session(
         self,

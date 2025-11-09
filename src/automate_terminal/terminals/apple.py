@@ -10,53 +10,25 @@ logger = logging.getLogger(__name__)
 
 
 class TerminalAppTerminal(BaseTerminal):
-    """Terminal.app implementation."""
-
     @property
     def display_name(self) -> str:
         return "Apple Terminal.app"
 
     def detect(self, term_program: str | None, platform_name: str) -> bool:
-        """Detect if Terminal.app is the current terminal."""
         return platform_name == "Darwin" and term_program == "Apple_Terminal"
 
     def get_current_session_id(self) -> str | None:
-        """Terminal.app doesn't have session IDs."""
+        # Terminal.app doesn't have session IDs.
         return None
 
     def supports_session_management(self) -> bool:
-        """Terminal.app supports session management via working directory detection."""
-        return True
+        # Terminal.app doesn't support session management via session IDs.
+        # It only supports working directory-based switching.
+        return False
 
     def session_exists(self, session_id: str) -> bool:
-        """Check if a session exists in Terminal.app by working directory."""
-        if not session_id:
-            return False
-
-        applescript = f"""
-        tell application "Terminal"
-            repeat with theWindow in windows
-                repeat with theTab in tabs of theWindow
-                    try
-                        set tabTTY to tty of theTab
-                        set applescriptShellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|sh)' | head -1 | awk '{{print $2}}'"
-                        set shellPid to do shell script applescriptShellCmd
-                        if shellPid is not "" then
-                            set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{{print $9}}'"
-                            set workingDir to do shell script cwdCmd
-                            if workingDir is "{self.applescript.escape(session_id)}" then
-                                return true
-                            end if
-                        end if
-                    end try
-                end repeat
-            end repeat
-            return false
-        end tell
-        """
-
-        result = self.applescript.execute_with_result(applescript)
-        return result == "true" if result else False
+        # Terminal.app doesn't have session IDs.
+        return False
 
     def _get_working_directory_from_tty(self, tty: str) -> str | None:
         """Get working directory of shell process using the given TTY."""
@@ -89,7 +61,15 @@ class TerminalAppTerminal(BaseTerminal):
     def switch_to_session(
         self, session_id: str, session_init_script: str | None = None
     ) -> bool:
+        # Terminal.app doesn't have session IDs.
+        return False
+
+    def switch_to_session_by_working_directory(
+        self, working_directory: Path, session_init_script: str | None = None
+    ) -> bool:
         """Switch to existing Terminal.app session by working directory."""
+        working_directory_str = str(working_directory)
+
         # Find the window title that contains our target directory
         find_window_script = f"""
         tell application "Terminal"
@@ -102,7 +82,7 @@ class TerminalAppTerminal(BaseTerminal):
                         if shellPid is not "" then
                             set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{{print $9}}'"
                             set workingDir to do shell script cwdCmd
-                            if workingDir is "{self.applescript.escape(session_id)}" then
+                            if workingDir is "{self.applescript.escape(working_directory_str)}" then
                                 -- Return the window name for menu matching
                                 return name of theWindow
                             end if
@@ -155,32 +135,8 @@ class TerminalAppTerminal(BaseTerminal):
         return switch_result and switch_result.startswith("success")
 
     def session_in_directory(self, session_id: str, directory: Path) -> bool:
-        """Check if Terminal.app session exists and is in the specified directory or subdirectory."""
-
-        applescript = f"""
-        tell application "Terminal"
-            repeat with theWindow in windows
-                repeat with theTab in tabs of theWindow
-                    try
-                        set tabTTY to tty of theTab
-                        set applescriptShellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|sh)' | head -1 | awk '{{print $2}}'"
-                        set shellPid to do shell script applescriptShellCmd
-                        if shellPid is not "" then
-                            set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{{print $9}}'"
-                            set workingDir to do shell script cwdCmd
-                            if workingDir starts with "{self.applescript.escape(str(directory))}" then
-                                return true
-                            end if
-                        end if
-                    end try
-                end repeat
-            end repeat
-            return false
-        end tell
-        """
-
-        result = self.applescript.execute_with_result(applescript)
-        return result == "true" if result else False
+        # Terminal.app doesn't have session IDs.
+        return False
 
     def open_new_tab(
         self, working_directory: Path, session_init_script: str | None = None
@@ -276,7 +232,10 @@ class TerminalAppTerminal(BaseTerminal):
         return self.applescript.execute(applescript)
 
     def list_sessions(self) -> list[dict[str, str]]:
-        """List all Terminal.app sessions with their working directories."""
+        """List all Terminal.app sessions with their working directories.
+
+        Note: Terminal.app doesn't have session IDs, so only working_directory is returned.
+        """
         applescript = """
         tell application "Terminal"
             set sessionData to ""
@@ -316,21 +275,10 @@ class TerminalAppTerminal(BaseTerminal):
     def find_session_by_working_directory(
         self, target_path: str, subdirectory_ok: bool = False
     ) -> str | None:
-        """Find a session ID that matches the given working directory."""
-        sessions = self.list_sessions()
-        target_path = str(Path(target_path).resolve())  # Normalize path
+        """Find a session ID that matches the given working directory.
 
-        for session in sessions:
-            session_path = str(Path(session["working_directory"]).resolve())
-            if session_path == target_path:
-                return session["session_id"]
-
-        if subdirectory_ok:
-            for session in sessions:
-                session_path = str(Path(session["working_directory"]).resolve())
-                if session_path.startswith(target_path + "/"):
-                    return session["session_id"]
-
+        Terminal.app doesn't have session IDs, so this always returns None.
+        """
         return None
 
     def _can_create_tabs(self) -> bool:
@@ -343,10 +291,10 @@ class TerminalAppTerminal(BaseTerminal):
         return True
 
     def _can_switch_to_session(self) -> bool:
-        return True
+        return True  # Can switch by working directory
 
     def _can_detect_session_id(self) -> bool:
-        return False  # Terminal.app doesn't have real session IDs
+        return False  # Terminal.app doesn't have session IDs
 
     def _can_detect_working_directory(self) -> bool:
         return True
