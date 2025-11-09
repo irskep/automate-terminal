@@ -28,6 +28,21 @@ class FakeAppleScriptService:
         return self.result_to_return
 
 
+class FakeCommandService:
+    """Fake command service for testing."""
+
+    def __init__(self):
+        self.executed_commands = []
+        self.return_value = True
+
+    def execute(
+        self, cmd: list[str], timeout: int = 10, description: str | None = None
+    ) -> bool:
+        """Record command execution, return configured value."""
+        self.executed_commands.append((cmd, timeout, description))
+        return self.return_value
+
+
 @dataclass
 class FakeTerminal:
     """Fake terminal for testing TerminalService."""
@@ -81,6 +96,12 @@ class FakeTerminal:
 def fake_applescript():
     """Provide a fake AppleScript service."""
     return FakeAppleScriptService()
+
+
+@pytest.fixture
+def fake_command():
+    """Provide a fake command service."""
+    return FakeCommandService()
 
 
 @pytest.fixture

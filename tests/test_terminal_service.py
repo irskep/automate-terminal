@@ -113,3 +113,38 @@ def test_terminal_service_new_window_checks_capability(fake_applescript):
         service = TerminalService(fake_applescript)
         with pytest.raises(RuntimeError, match="does not support window creation"):
             service.new_window("/tmp")
+
+
+def test_create_terminal_implementation_respects_override(
+    fake_applescript, monkeypatch
+):
+    """Test that AUTOMATE_TERMINAL_OVERRIDE env var forces specific terminal."""
+    monkeypatch.setenv("AUTOMATE_TERMINAL_OVERRIDE", "iterm2")
+
+    # Even though we pass vscode as TERM_PROGRAM, should get iTerm2
+    terminal = create_terminal_implementation("Darwin", "vscode", fake_applescript)
+    assert terminal is not None
+    assert terminal.display_name == "iTerm2"
+
+
+def test_create_terminal_implementation_override_case_insensitive(
+    fake_applescript, monkeypatch
+):
+    """Test that override is case insensitive."""
+    monkeypatch.setenv("AUTOMATE_TERMINAL_OVERRIDE", "TERMINAL")
+
+    terminal = create_terminal_implementation("Darwin", "iTerm.app", fake_applescript)
+    assert terminal is not None
+    assert terminal.display_name == "Apple Terminal.app"
+
+
+def test_create_terminal_implementation_override_unknown_value(
+    fake_applescript, monkeypatch
+):
+    """Test that unknown override value falls back to normal detection."""
+    monkeypatch.setenv("AUTOMATE_TERMINAL_OVERRIDE", "unknown_terminal")
+
+    # Should fall back to normal detection
+    terminal = create_terminal_implementation("Darwin", "iTerm.app", fake_applescript)
+    assert terminal is not None
+    assert terminal.display_name == "iTerm2"

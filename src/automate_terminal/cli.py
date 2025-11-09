@@ -151,6 +151,7 @@ def cmd_check(args):
     # Get capabilities
     caps = service.get_capabilities()
 
+    override = os.getenv("AUTOMATE_TERMINAL_OVERRIDE")
     data = {
         "terminal": service.get_terminal_name(),
         "term_program": os.getenv("TERM_PROGRAM", ""),
@@ -160,17 +161,21 @@ def cmd_check(args):
         "capabilities": asdict(caps),
         "version": __version__,
     }
+    if override:
+        data["override"] = override
 
-    text = (
-        f"Terminal: {data['terminal']}\n"
-        f"Terminal Program: {data['term_program']}\n"
-        f"Shell: {data['shell']}\n"
-        f"Supports session management: {caps.can_switch_to_session}\n"
-        f"Supports tab creation: {caps.can_create_tabs}\n"
-        f"Supports window creation: {caps.can_create_windows}\n"
-        f"Current session ID: {data['current_session_id'] or 'N/A'}\n"
-        f"Current working directory: {data['current_working_directory']}"
-    )
+    text_lines = [
+        f"Terminal: {data['terminal']}"
+        + (f" (overridden: {override})" if override else ""),
+        f"Terminal Program: {data['term_program']}",
+        f"Shell: {data['shell']}",
+        f"Supports session management: {caps.can_switch_to_session}",
+        f"Supports tab creation: {caps.can_create_tabs}",
+        f"Supports window creation: {caps.can_create_windows}",
+        f"Current session ID: {data['current_session_id'] or 'N/A'}",
+        f"Current working directory: {data['current_working_directory']}",
+    ]
+    text = "\n".join(text_lines)
 
     output(args.output, data, text)
     return 0
