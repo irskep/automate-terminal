@@ -25,10 +25,12 @@ pip install -e .
 ## Supported Terminals
 
 | Terminal     | New Tabs/Windows | Switch by ID | Switch by Working Dir | List Sessions | Paste Commands |
-|--------------|------------------|--------------|----------------------|---------------|----------------|
-| iTerm2       | ✅               | ✅           | ✅                   | ✅            | ✅             |
-| Terminal.app | ✅               | ❌           | ✅                   | ✅            | ✅             |
-| Ghostty      | ✅               | ❌           | ❌                   | ❌            | ✅             |
+| ------------ | ---------------- | ------------ | --------------------- | ------------- | -------------- |
+| iTerm2       | ✅               | ✅           | ✅                    | ✅            | ✅             |
+| Terminal.app | ✅               | ❌           | ✅                    | ✅            | ✅             |
+| Ghostty      | ✅               | ❌           | ❌                    | ❌            | ✅             |
+| VSCode       | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             |
+| Cursor       | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             |
 
 Other terminals are not supported; `automate-terminal` will exit with an error code in other terminals.
 
@@ -126,6 +128,12 @@ Execute commands after creating/switching sessions.
 
 Shell-specific flags override generic `--paste-and-run` when detected shell matches.
 
+**Note:** Some terminals (VSCode, Cursor) cannot execute paste scripts programmatically. When using `--output=json`, check the `paste_script_executed` field to determine if you need to run the script manually:
+
+- `true`: The paste script was executed by the terminal
+- `false`: The paste script was provided but the terminal cannot execute it (you should run it manually)
+- Field omitted: No paste script was provided
+
 ### Debug and Dry Run
 
 ```bash
@@ -134,3 +142,28 @@ Shell-specific flags override generic `--paste-and-run` when detected shell matc
 ```
 
 Use `--dry-run` to see what AppleScript commands would be executed without actually running them. Useful for debugging and understanding what the tool will do.
+
+## Environment Variables
+
+### AUTOMATE_TERMINAL_OVERRIDE
+
+Force `automate-terminal` to use a specific terminal implementation, bypassing automatic detection.
+
+**Use case:** When running from VSCode/Cursor integrated terminal, you may want to manage the underlying terminal (iTerm2, Terminal.app) instead of VSCode/Cursor itself.
+
+**Values:**
+- `iterm2` - Force iTerm2 implementation
+- `terminal` or `terminal.app` - Force Terminal.app implementation
+- `ghostty` - Force Ghostty implementation
+- `vscode` - Force VSCode implementation
+- `cursor` - Force Cursor implementation
+
+**Example:**
+```bash
+# From VSCode integrated terminal, list iTerm2 sessions instead of VSCode windows
+export AUTOMATE_TERMINAL_OVERRIDE=iterm2
+automate-terminal list-sessions
+
+# Or inline
+AUTOMATE_TERMINAL_OVERRIDE=terminal automate-terminal check
+```

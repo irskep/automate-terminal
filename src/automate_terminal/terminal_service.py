@@ -6,11 +6,13 @@ import platform
 from pathlib import Path
 
 from automate_terminal.applescript_service import AppleScriptService
+from automate_terminal.command_service import CommandService
 from automate_terminal.models import Capabilities
 from automate_terminal.terminals.apple import TerminalAppTerminal
 from automate_terminal.terminals.base import BaseTerminal
 from automate_terminal.terminals.ghostty import GhosttyMacTerminal
 from automate_terminal.terminals.iterm2 import ITerm2Terminal
+from automate_terminal.terminals.vscode import VSCodeTerminal
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +34,39 @@ def create_terminal_implementation(
     applescript_service: AppleScriptService,
 ) -> BaseTerminal | None:
     """Create the appropriate terminal implementation."""
+    command_service = CommandService()
+
+    # Check for override environment variable
+    override = os.getenv("AUTOMATE_TERMINAL_OVERRIDE")
+    if override:
+        logger.debug(f"Using AUTOMATE_TERMINAL_OVERRIDE={override}")
+        override_map = {
+            "iterm2": ITerm2Terminal(applescript_service),
+            "terminal": TerminalAppTerminal(applescript_service),
+            "terminal.app": TerminalAppTerminal(applescript_service),
+            "ghostty": GhosttyMacTerminal(applescript_service),
+            "vscode": VSCodeTerminal(
+                applescript_service, command_service, variant="vscode"
+            ),
+            "cursor": VSCodeTerminal(
+                applescript_service, command_service, variant="cursor"
+            ),
+        }
+        terminal = override_map.get(override.lower())
+        if terminal:
+            logger.debug(f"Overridden terminal: {terminal.display_name}")
+            return terminal
+        else:
+            logger.warning(f"Unknown AUTOMATE_TERMINAL_OVERRIDE value: {override}")
+
     # Ordered list of terminal implementations to try
+    # Cursor before VSCode since it's more specific (both use TERM_PROGRAM=vscode)
     terminals = [
         ITerm2Terminal(applescript_service),
         TerminalAppTerminal(applescript_service),
         GhosttyMacTerminal(applescript_service),
+        VSCodeTerminal(applescript_service, command_service, variant="cursor"),
+        VSCodeTerminal(applescript_service, command_service, variant="vscode"),
     ]
 
     # Try each terminal implementation's detect method
@@ -125,6 +155,12 @@ class TerminalService:
         )
 
         if not session_id:
+            # For terminals that can switch without session detection,
+            # try switching with the path directly
+            if self.terminal._can_switch_without_session_detection():
+                return self.terminal.switch_to_session(
+                    str(working_directory), paste_script
+                )
             return False
 
         return self.terminal.switch_to_session(session_id, paste_script)

@@ -2,6 +2,7 @@
 
 import logging
 import platform
+from pathlib import Path
 
 from automate_terminal.utils import run_command
 
@@ -92,3 +93,25 @@ class AppleScriptService:
         except Exception as e:
             logger.error(f"Failed to run AppleScript: {e}")
             return None
+
+    def escape_string(self, text: str) -> str:
+        """Escape text for use in AppleScript strings.
+
+        Args:
+            text: Text to escape
+
+        Returns:
+            Escaped text safe for AppleScript string literals
+        """
+        return text.replace("\\", "\\\\").replace('"', '\\"')
+
+    def escape_path(self, path: Path) -> str:
+        """Escape a path for use in AppleScript strings.
+
+        Args:
+            path: Path to escape
+
+        Returns:
+            Escaped path safe for AppleScript string literals
+        """
+        return str(path).replace("\\", "\\\\").replace('"', '\\"')

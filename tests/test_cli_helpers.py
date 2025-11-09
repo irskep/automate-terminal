@@ -2,7 +2,13 @@
 
 import json
 
-from automate_terminal.cli import get_paste_script, output, output_error
+from automate_terminal.cli import (
+    get_paste_script,
+    output,
+    output_error,
+    will_paste_script_execute,
+)
+from automate_terminal.models import Capabilities
 
 
 def test_output_json(capsys):
@@ -117,3 +123,60 @@ def test_get_paste_script_none(mock_args):
     )
     result = get_paste_script(args, FakeService())
     assert result is None
+
+
+def test_will_paste_script_execute_returns_none_when_no_script():
+    """Test will_paste_script_execute returns None when no script provided."""
+
+    class FakeService:
+        def get_capabilities(self):
+            return Capabilities(
+                can_create_tabs=True,
+                can_create_windows=True,
+                can_list_sessions=True,
+                can_switch_to_session=True,
+                can_detect_session_id=True,
+                can_detect_working_directory=True,
+                can_paste_commands=True,
+            )
+
+    result = will_paste_script_execute(None, FakeService())
+    assert result is None
+
+
+def test_will_paste_script_execute_returns_true_when_supported():
+    """Test will_paste_script_execute returns True when terminal supports pasting."""
+
+    class FakeService:
+        def get_capabilities(self):
+            return Capabilities(
+                can_create_tabs=True,
+                can_create_windows=True,
+                can_list_sessions=True,
+                can_switch_to_session=True,
+                can_detect_session_id=True,
+                can_detect_working_directory=True,
+                can_paste_commands=True,
+            )
+
+    result = will_paste_script_execute("echo hello", FakeService())
+    assert result is True
+
+
+def test_will_paste_script_execute_returns_false_when_not_supported():
+    """Test will_paste_script_execute returns False when terminal doesn't support pasting."""
+
+    class FakeService:
+        def get_capabilities(self):
+            return Capabilities(
+                can_create_tabs=False,
+                can_create_windows=True,
+                can_list_sessions=False,
+                can_switch_to_session=False,
+                can_detect_session_id=False,
+                can_detect_working_directory=True,
+                can_paste_commands=False,  # VSCode/Cursor case
+            )
+
+    result = will_paste_script_execute("echo hello", FakeService())
+    assert result is False

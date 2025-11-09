@@ -106,6 +106,23 @@ def get_paste_script(args, service: TerminalService) -> str | None:
     return "; ".join(scripts)
 
 
+def will_paste_script_execute(
+    paste_script: str | None, service: TerminalService
+) -> bool | None:
+    """Determine if the paste script will be executed.
+
+    Returns:
+        True if paste script will be executed
+        False if paste script was provided but terminal doesn't support it
+        None if no paste script was provided
+    """
+    if paste_script is None:
+        return None
+
+    caps = service.get_capabilities()
+    return caps.can_paste_commands
+
+
 def cmd_check(args):
     """Check terminal capabilities."""
     service = _get_terminal_service(args)
@@ -134,6 +151,7 @@ def cmd_check(args):
     # Get capabilities
     caps = service.get_capabilities()
 
+    override = os.getenv("AUTOMATE_TERMINAL_OVERRIDE")
     data = {
         "terminal": service.get_terminal_name(),
         "term_program": os.getenv("TERM_PROGRAM", ""),
@@ -143,17 +161,21 @@ def cmd_check(args):
         "capabilities": asdict(caps),
         "version": __version__,
     }
+    if override:
+        data["override"] = override
 
-    text = (
-        f"Terminal: {data['terminal']}\n"
-        f"Terminal Program: {data['term_program']}\n"
-        f"Shell: {data['shell']}\n"
-        f"Supports session management: {caps.can_switch_to_session}\n"
-        f"Supports tab creation: {caps.can_create_tabs}\n"
-        f"Supports window creation: {caps.can_create_windows}\n"
-        f"Current session ID: {data['current_session_id'] or 'N/A'}\n"
-        f"Current working directory: {data['current_working_directory']}"
-    )
+    text_lines = [
+        f"Terminal: {data['terminal']}"
+        + (f" (overridden: {override})" if override else ""),
+        f"Terminal Program: {data['term_program']}",
+        f"Shell: {data['shell']}",
+        f"Supports session management: {caps.can_switch_to_session}",
+        f"Supports tab creation: {caps.can_create_tabs}",
+        f"Supports window creation: {caps.can_create_windows}",
+        f"Current session ID: {data['current_session_id'] or 'N/A'}",
+        f"Current working directory: {data['current_working_directory']}",
+    ]
+    text = "\n".join(text_lines)
 
     output(args.output, data, text)
     return 0
@@ -184,6 +206,7 @@ def cmd_switch_to(args):
         )
 
         if success:
+            paste_executed = will_paste_script_execute(paste_script, service)
             data = {
                 "success": True,
                 "action": "switched_to_existing",
@@ -194,6 +217,8 @@ def cmd_switch_to(args):
                 data["session_id"] = session_id
             if working_directory:
                 data["working_directory"] = str(working_directory)
+            if paste_executed is not None:
+                data["paste_script_executed"] = paste_executed
 
             output(args.output, data, "Switched to existing session")
             return 0
@@ -232,6 +257,7 @@ def cmd_new_tab(args):
         success = service.new_tab(working_directory, paste_script)
 
         if success:
+            paste_executed = will_paste_script_execute(paste_script, service)
             data = {
                 "success": True,
                 "action": "created_new_tab",
@@ -239,6 +265,8 @@ def cmd_new_tab(args):
                 "terminal": service.get_terminal_name(),
                 "shell": service.get_shell_name(),
             }
+            if paste_executed is not None:
+                data["paste_script_executed"] = paste_executed
 
             output(args.output, data, f"Created new tab in {working_directory}")
             return 0
@@ -268,6 +296,7 @@ def cmd_new_window(args):
         success = service.new_window(working_directory, paste_script)
 
         if success:
+            paste_executed = will_paste_script_execute(paste_script, service)
             data = {
                 "success": True,
                 "action": "created_new_window",
@@ -275,6 +304,8 @@ def cmd_new_window(args):
                 "terminal": service.get_terminal_name(),
                 "shell": service.get_shell_name(),
             }
+            if paste_executed is not None:
+                data["paste_script_executed"] = paste_executed
 
             output(args.output, data, f"Created new window in {working_directory}")
             return 0

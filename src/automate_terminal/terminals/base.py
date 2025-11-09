@@ -142,10 +142,12 @@ class BaseTerminal(ABC):
         """Override in subclass to indicate command pasting support."""
         return False
 
-    def _escape_for_applescript(self, text: str) -> str:
-        """Escape text for use in AppleScript strings."""
-        return text.replace("\\", "\\\\").replace('"', '\\"')
+    def _can_switch_without_session_detection(self) -> bool:
+        """Whether switch_to_session can work without finding session first.
 
-    def _escape_path_for_command(self, path: Path) -> str:
-        """Escape a path for use inside AppleScript command strings."""
-        return str(path).replace("\\", "\\\\").replace('"', '\\"')
+        True for terminals like VSCode where switch_to_session(path) works
+        even if find_session_by_working_directory returns None.
+
+        Default: False (requires session detection before switching)
+        """
+        return False
