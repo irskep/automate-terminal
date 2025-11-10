@@ -259,3 +259,10 @@ get_shell_name(dry_run=False, debug=False) -> str | None
 
 run_in_active_session(command, dry_run=False, debug=False) -> bool
 ```
+
+## References
+
+- [iTerm2 AppleScript reference](https://iterm2.com/documentation-scripting.html)
+- [Kitty automation reference](https://sw.kovidgoyal.net/kitty/remote-control/)
+- [WezTerm automation reference](https://wezterm.org/cli/cli/index.html)
+- [tmux man page](https://man.openbsd.org/OpenBSD-current/man1/tmux.1)
