@@ -5,9 +5,12 @@ program, and autoamte-terminal is written in Python, we might as well have an
 API.
 """
 
+import os
+from dataclasses import asdict
 from pathlib import Path
 
 from .applescript_service import AppleScriptService
+from .command_service import CommandService
 from .models import Capabilities
 from .terminal_service import TerminalService
 
@@ -15,13 +18,23 @@ from .terminal_service import TerminalService
 def _get_terminal_service(
     dry_run: bool = False, debug: bool = False
 ) -> TerminalService:
-    applescript_service = AppleScriptService(dry_run=dry_run)
+    command_service = CommandService(dry_run=dry_run)
+    applescript_service = AppleScriptService(command_service=command_service)
     return TerminalService(applescript_service=applescript_service)
 
 
 def check(dry_run: bool = False, debug: bool = False) -> dict[str, str | Capabilities]:
     service = _get_terminal_service(dry_run=dry_run, debug=debug)
-    return service.check()
+    caps = service.get_capabilities()
+
+    return {
+        "terminal": service.get_terminal_name(),
+        "term_program": os.getenv("TERM_PROGRAM", ""),
+        "shell": service.get_shell_name() or "unknown",
+        "current_session_id": service.get_current_session_id(),
+        "current_working_directory": str(Path.cwd()),
+        "capabilities": asdict(caps),
+    }
 
 
 def new_tab(

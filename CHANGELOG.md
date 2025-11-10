@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- Fixed `TypeError` in Python API when calling `check()` and other API functions due to incorrect service initialization
+
 ## 0.1.5 - 2025-11-09
 
 ### Added

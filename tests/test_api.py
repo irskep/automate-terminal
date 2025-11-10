@@ -13,32 +13,30 @@ from automate_terminal.models import Capabilities
 def mock_terminal_service():
     """Create a mock TerminalService with default behavior."""
     mock = MagicMock()
-    mock.check.return_value = {
-        "terminal": "iTerm2",
-        "capabilities": Capabilities(
-            can_create_tabs=True,
-            can_create_windows=True,
-            can_list_sessions=True,
-            can_switch_to_session=True,
-            can_detect_session_id=True,
-            can_detect_working_directory=True,
-            can_paste_commands=True,
-            can_run_in_active_session=True,
-        ),
-    }
+    mock.get_terminal_name.return_value = "iTerm2"
+    mock.get_capabilities.return_value = Capabilities(
+        can_create_tabs=True,
+        can_create_windows=True,
+        can_list_sessions=True,
+        can_switch_to_session=True,
+        can_detect_session_id=True,
+        can_detect_working_directory=True,
+        can_paste_commands=True,
+        can_run_in_active_session=True,
+    )
+    mock.get_current_session_id.return_value = "session-123"
+    mock.get_shell_name.return_value = "zsh"
     mock.new_tab.return_value = True
     mock.new_window.return_value = True
     mock.switch_to_session.return_value = True
     mock.list_sessions.return_value = [
         {"session_id": "session1", "working_directory": "/path/to/dir"}
     ]
-    mock.get_current_session_id.return_value = "session-123"
-    mock.get_shell_name.return_value = "zsh"
     return mock
 
 
 def test_check(mock_terminal_service):
-    """Test check() delegates to TerminalService.check()."""
+    """Test check() calls TerminalService methods to build result."""
     with patch(
         "automate_terminal.api._get_terminal_service",
         return_value=mock_terminal_service,
@@ -46,8 +44,11 @@ def test_check(mock_terminal_service):
         result = api.check()
 
     assert result["terminal"] == "iTerm2"
-    assert result["capabilities"].can_create_tabs is True
-    mock_terminal_service.check.assert_called_once()
+    assert result["capabilities"]["can_create_tabs"] is True
+    mock_terminal_service.get_terminal_name.assert_called_once()
+    mock_terminal_service.get_capabilities.assert_called_once()
+    mock_terminal_service.get_shell_name.assert_called_once()
+    mock_terminal_service.get_current_session_id.assert_called_once()
 
 
 def test_check_with_debug_and_dry_run(mock_terminal_service):
@@ -261,16 +262,22 @@ def test_get_shell_name_returns_none(mock_terminal_service):
 
 
 def test_get_terminal_service_creates_services():
-    """Test _get_terminal_service creates AppleScriptService and TerminalService."""
+    """Test _get_terminal_service creates CommandService, AppleScriptService and TerminalService."""
     with (
+        patch("automate_terminal.api.CommandService") as mock_command_cls,
         patch("automate_terminal.api.AppleScriptService") as mock_applescript_cls,
         patch("automate_terminal.api.TerminalService") as mock_terminal_cls,
     ):
         api._get_terminal_service(dry_run=True, debug=True)
 
     # Verify services were created with correct parameters
-    mock_applescript_cls.assert_called_once_with(dry_run=True)
-    mock_terminal_cls.assert_called_once()
+    mock_command_cls.assert_called_once_with(dry_run=True)
+    mock_applescript_cls.assert_called_once_with(
+        command_service=mock_command_cls.return_value
+    )
+    mock_terminal_cls.assert_called_once_with(
+        applescript_service=mock_applescript_cls.return_value
+    )
 
 
 def test_api_functions_pass_debug_and_dry_run():
@@ -278,10 +285,19 @@ def test_api_functions_pass_debug_and_dry_run():
     with patch("automate_terminal.api._get_terminal_service") as mock_get:
         mock_service = MagicMock()
         mock_get.return_value = mock_service
-        mock_service.check.return_value = {
-            "terminal": "test",
-            "capabilities": MagicMock(),
-        }
+        mock_service.get_terminal_name.return_value = "test"
+        mock_service.get_capabilities.return_value = Capabilities(
+            can_create_tabs=True,
+            can_create_windows=True,
+            can_list_sessions=True,
+            can_switch_to_session=True,
+            can_detect_session_id=True,
+            can_detect_working_directory=True,
+            can_paste_commands=True,
+            can_run_in_active_session=True,
+        )
+        mock_service.get_shell_name.return_value = "zsh"
+        mock_service.get_current_session_id.return_value = "session-123"
 
         # Test each function with debug=True, dry_run=True
         api.check(debug=True, dry_run=True)
