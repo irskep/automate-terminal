@@ -1,6 +1,6 @@
 # automate-terminal
 
-Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, Ghostty, tmux, WezTerm, Kitty, Cursor, and Visual Studio Code.
+Automate opening of new tabs and windows in terminal programs. Currently supports iTerm2, Terminal.app, Ghostty, Guake, tmux, WezTerm, Kitty, Cursor, and Visual Studio Code.
 
 automate-terminal is a best-effort project. Some terminals do not support automation at all! It's also intended to be used as a component in other tools, so it errs on the side of strictness over fallbacks. See the command reference for specifics.
 
@@ -23,6 +23,7 @@ mise install pip:automate-terminal
 | iTerm2       | macOS          | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
 | Terminal.app | macOS          | ✅               | ❌           | ✅                    | ✅            | ✅             | ✅                    |
 | Ghostty      | macOS          | ✅               | ❌           | ❌                    | ❌            | ✅             | ✅                    |
+| Guake        | Linux          | ⚠️ (tabs only)   | ✅           | ✅                    | ✅            | ✅             | ✅                    |
 | tmux         | Cross-platform | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
 | WezTerm      | Cross-platform | ✅               | ✅           | ✅                    | ✅            | ✅             | ✅                    |
 | Kitty        | Cross-platform | ✅\*             | ✅\*         | ✅\*                  | ✅\*          | ✅\*           | ✅\*                  |
@@ -30,6 +31,8 @@ mise install pip:automate-terminal
 | Cursor       | Cross-platform | ⚠️ (no tabs)     | ❌           | ✅                    | ❌            | ❌             | ❌                    |
 
 \* **Kitty requires `allow_remote_control yes` in `kitty.conf`** to enable automation features.
+
+**Guake** requires `dbus-python` (system package, usually pre-installed with Guake) for DBus communication.
 
 Other terminals are not supported; `automate-terminal` will exit with an error code in unsupported terminals.
 

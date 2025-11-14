@@ -26,7 +26,7 @@ classifiers = [
     "Topic :: System :: Shells",
     "Topic :: Software Development :: Libraries",
 ]
-dependencies = []
+dependencies = ["psutil>=5.0.0"]
 
 [project.optional-dependencies]
 dev = [
