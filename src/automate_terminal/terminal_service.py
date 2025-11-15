@@ -9,6 +9,7 @@ from automate_terminal.models import Capabilities
 from automate_terminal.terminals.apple import TerminalAppTerminal
 from automate_terminal.terminals.base import BaseTerminal
 from automate_terminal.terminals.ghostty import GhosttyMacTerminal
+from automate_terminal.terminals.guake import GuakeTerminal
 from automate_terminal.terminals.iterm2 import ITerm2Terminal
 from automate_terminal.terminals.kitty import KittyTerminal
 from automate_terminal.terminals.tmux import TmuxTerminal
@@ -52,6 +53,7 @@ def create_terminal_implementation(
             "tmux": TmuxTerminal(applescript_service, command_service),
             "wezterm": WeztermTerminal(applescript_service, command_service),
             "kitty": KittyTerminal(applescript_service, command_service),
+            "guake": GuakeTerminal(applescript_service, command_service),
             "vscode": VSCodeTerminal(
                 applescript_service, command_service, variant="vscode"
             ),
@@ -70,6 +72,8 @@ def create_terminal_implementation(
     terminals = [
         # tmux first since it can be running inside any other terminal
         TmuxTerminal(applescript_service, command_service),
+        # Guake sets GUAKE_TAB_UUID which is very specific
+        GuakeTerminal(applescript_service, command_service),
         WeztermTerminal(applescript_service, command_service),
         KittyTerminal(applescript_service, command_service),
         ITerm2Terminal(applescript_service, command_service),
