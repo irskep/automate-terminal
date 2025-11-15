@@ -6,6 +6,8 @@
 
 ### Added
 
+- Support for Guake, courtesy of @fprochazka
+
 ### Changed
 
 ### Fixed
