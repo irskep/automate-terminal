@@ -8,6 +8,8 @@
 
 ### Changed
 
+- Guake dependencies (`dbus-python` and `psutil`) are now optional; install with `pip install automate-terminal[guake]`
+
 ### Fixed
 
 ## 0.1.7 - 2025-11-15
