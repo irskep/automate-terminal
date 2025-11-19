@@ -6,14 +6,15 @@ requires-python = ">=3.10"
 name = "automate-terminal"
 version = "0.1.8.dev0"
 source = { editable = "." }
-dependencies = [
-    { name = "psutil" },
-]
 
 [package.optional-dependencies]
 dev = [
     { name = "pytest" },
     { name = "ruff" },
+]
+guake = [
+    { name = "dbus-python" },
+    { name = "psutil" },
 ]
 
 [package.dev-dependencies]
@@ -26,11 +27,12 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "psutil", specifier = ">=5.0.0" },
+    { name = "dbus-python", marker = "extra == 'guake'", specifier = ">=1.2.0" },
+    { name = "psutil", marker = "extra == 'guake'", specifier = ">=5.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["guake", "dev"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -126,6 +128,12 @@ wheels = [
 toml = [
     { name = "tomli", marker = "python_full_version <= '3.11'" },
 ]
+
+[[package]]
+name = "dbus-python"
+version = "1.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/24/63118050c7dd7be04b1ccd60eab53fef00abe844442e1b6dec92dae505d6/dbus-python-1.4.0.tar.gz", hash = "sha256:991666e498f60dbf3e49b8b7678f5559b8a65034fdf61aae62cdecdb7d89c770", size = 232490, upload-time = "2025-03-13T19:57:54.212Z" }
 
 [[package]]
 name = "distlib"
