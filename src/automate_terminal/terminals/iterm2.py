@@ -127,7 +127,7 @@ class ITerm2Terminal(BaseTerminal):
         commands = [f"cd {self.applescript.escape(working_directory)}"]
 
         if session_init_script:
-            commands.append(session_init_script)
+            commands.append(self.applescript.escape(session_init_script))
 
         applescript = f"""
         tell application "iTerm2"
@@ -149,7 +149,7 @@ class ITerm2Terminal(BaseTerminal):
 
         commands = [f"cd {self.applescript.escape(working_directory)}"]
         if session_init_script:
-            commands.append(session_init_script)
+            commands.append(self.applescript.escape(session_init_script))
 
         applescript = f"""
         tell application "iTerm2"
