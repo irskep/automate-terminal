@@ -64,7 +64,9 @@ class GuakeTerminal(BaseTerminal):
             description=description,
         )
 
-    def _call_gdbus_bool(self, method: str, args: list[str] | None = None) -> bool | None:
+    def _call_gdbus_bool(
+        self, method: str, args: list[str] | None = None
+    ) -> bool | None:
         output = self._call_gdbus(method, args)
         if not output:
             return None
@@ -105,7 +107,13 @@ class GuakeTerminal(BaseTerminal):
                     parts = line.split()
                     if len(parts) >= 2:
                         return int(parts[1])
-        except (FileNotFoundError, ProcessLookupError, PermissionError, OSError, ValueError):
+        except (
+            FileNotFoundError,
+            ProcessLookupError,
+            PermissionError,
+            OSError,
+            ValueError,
+        ):
             pass
         return None
 
@@ -173,7 +181,9 @@ class GuakeTerminal(BaseTerminal):
         """Get all shell processes running under Guake with their tab UUIDs and CWDs."""
         proc_root = PROC_ROOT
         if not proc_root.exists():
-            logger.warning("/proc filesystem not available; cannot inspect Guake sessions")
+            logger.warning(
+                "/proc filesystem not available; cannot inspect Guake sessions"
+            )
             return []
 
         processes: dict[int, dict[str, object]] = {}

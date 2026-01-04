@@ -1,6 +1,5 @@
 """Tests for Guake terminal implementation."""
 
-
 import pytest
 
 from automate_terminal.terminals import guake as guake_module
@@ -27,7 +26,9 @@ def test_guake_detect_requires_env(monkeypatch, guake_terminal):
     assert guake_terminal.detect(None, "Linux") is False
 
 
-def test_guake_get_shell_processes(tmp_path, monkeypatch, fake_applescript, fake_command):
+def test_guake_get_shell_processes(
+    tmp_path, monkeypatch, fake_applescript, fake_command
+):
     """_get_shell_processes enumerates shells under a fake /proc tree."""
     proc_root = tmp_path / "proc"
     proc_root.mkdir()
@@ -90,7 +91,9 @@ def test_guake_run_in_active_session(monkeypatch, fake_applescript, fake_command
         except StopIteration:
             return "('true',)"
 
-    monkeypatch.setattr(fake_command, "execute_r_with_output", fake_execute_r_with_output)
+    monkeypatch.setattr(
+        fake_command, "execute_r_with_output", fake_execute_r_with_output
+    )
 
     terminal = GuakeTerminal(fake_applescript, fake_command)
     assert terminal.run_in_active_session("echo hi") is True
