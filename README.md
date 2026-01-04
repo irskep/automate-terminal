@@ -16,14 +16,14 @@ pip install automate-terminal
 mise install pip:automate-terminal
 ```
 
-For Guake terminal support on Linux, install with the guake extra:
+For Guake terminal support on Linux, install `automate-terminal` normally and ensure the `gdbus` command (provided by GLib/GIO) is available:
 
 ```bash
-pip install automate-terminal[guake]
+pip install automate-terminal
 ```
 
 ```bash
-mise install pip:automate-terminal[guake]
+mise install pip:automate-terminal
 ```
 
 ## Supported Terminals
@@ -42,7 +42,7 @@ mise install pip:automate-terminal[guake]
 
 \* **Kitty requires `allow_remote_control yes` in `kitty.conf`** to enable automation features.
 
-**Guake** requires the optional `guake` extra (`pip install automate-terminal[guake]`) which provides `dbus-python` and `psutil` for DBus communication.
+**Guake** requires only the `gdbus` command (usually provided by GLib/GIO) for DBus communication.
 
 Other terminals are not supported; `automate-terminal` will exit with an error code in unsupported terminals.
 
