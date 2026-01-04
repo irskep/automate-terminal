@@ -16,15 +16,10 @@ pip install automate-terminal
 mise install pip:automate-terminal
 ```
 
-For Guake terminal support on Linux, install `automate-terminal` normally and ensure the `gdbus` command (provided by GLib/GIO) is available:
+For Guake terminal support on Linux:
 
-```bash
-pip install automate-terminal
-```
-
-```bash
-mise install pip:automate-terminal
-```
+1. Install `automate-terminal` as usual (`pip install automate-terminal` or `mise install pip:automate-terminal`).
+2. Make sure the `gdbus` CLI from GLib/GIO is on your `PATH`. On most desktop distributions it already is; if you use a minimal system, install the GLib utilities package (e.g., `apt install libglib2.0-bin`, `dnf install glib2`, `pacman -S glib2`, or `apk add glib`).
 
 ## Supported Terminals
 
