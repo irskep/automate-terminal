@@ -23,7 +23,7 @@ def test_open_new_tab_escapes_session_init_script(iterm2_terminal, fake_applescr
     _, script = fake_applescript.executed_scripts[0]
 
     # The script should contain the escaped quotes
-    assert r'echo \"hello world\"' in script
+    assert r"echo \"hello world\"" in script
     # And should NOT contain unescaped quotes that would break AppleScript
     assert 'echo "hello world"' not in script
 
@@ -39,4 +39,4 @@ def test_open_new_window_escapes_session_init_script(iterm2_terminal, fake_apple
     _, script = fake_applescript.executed_scripts[0]
 
     # The script should contain the escaped quotes
-    assert r'source \".venv/bin/activate\"' in script
+    assert r"source \".venv/bin/activate\"" in script
