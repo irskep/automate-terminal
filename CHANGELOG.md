@@ -2,13 +2,15 @@
 
 <!-- loosely based on https://keepachangelog.com/en/1.0.0/ -->
 
-## 0.1.9 - Unreleased
+## 0.1.9 - 2026-01-03
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+- Fixed AppleScript syntax error in iTerm2 when `session_init_script` contains quotes
 
 ## 0.1.8 - 2025-11-18
 
