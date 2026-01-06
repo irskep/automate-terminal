@@ -2,22 +2,9 @@
 
 import logging
 import os
+import re
+import shutil
 from pathlib import Path
-
-try:
-    import psutil
-
-    HAS_PSUTIL = True
-except ImportError:
-    HAS_PSUTIL = False
-
-try:
-    import dbus
-
-    HAS_DBUS = True
-except ImportError:
-    HAS_DBUS = False
-    dbus = None
 
 from automate_terminal.models import Capabilities
 
@@ -25,9 +12,16 @@ from .base import BaseTerminal
 
 logger = logging.getLogger(__name__)
 
+GUAKE_DBUS_DEST = "org.guake3.RemoteControl"
+GUAKE_DBUS_PATH = "/org/guake3/RemoteControl"
+GUAKE_DBUS_INTERFACE = "org.guake3.RemoteControl"
+PROC_ROOT = Path("/proc")
+HAS_GDBUS = shutil.which("gdbus") is not None
+SHELL_PROCESS_NAMES = {"bash", "zsh", "fish", "sh", "dash"}
+
 
 class GuakeTerminal(BaseTerminal):
-    # Requires Guake terminal and python-dbus
+    # Requires Guake terminal plus gdbus CLI support
 
     @property
     def display_name(self) -> str:
@@ -35,24 +29,139 @@ class GuakeTerminal(BaseTerminal):
 
     def detect(self, term_program: str | None, platform_name: str) -> bool:
         # Guake sets GUAKE_TAB_UUID environment variable
-        # Also require psutil and dbus to be available
-        return os.getenv("GUAKE_TAB_UUID") is not None and HAS_PSUTIL and HAS_DBUS
+        return os.getenv("GUAKE_TAB_UUID") is not None and HAS_GDBUS
 
-    def _get_dbus_interface(self):
-        """Get Guake DBus interface."""
-        if not HAS_DBUS:
-            logger.error("dbus-python module not available")
+    def _call_gdbus(self, method: str, args: list[str] | None = None) -> str | None:
+        """Invoke a Guake DBus method via gdbus and return raw output."""
+        if not HAS_GDBUS:
+            logger.error("gdbus command not available")
             return None
 
+        full_method = f"{GUAKE_DBUS_INTERFACE}.{method}"
+        cmd = [
+            "gdbus",
+            "call",
+            "--session",
+            "--dest",
+            GUAKE_DBUS_DEST,
+            "--object-path",
+            GUAKE_DBUS_PATH,
+            "--method",
+            full_method,
+        ]
+        if args:
+            cmd.extend(args)
+
+        description = f"Guake DBus call {method}"
+        return self.command_service.execute_r_with_output(
+            cmd,
+            timeout=10,
+            description=description,
+        )
+
+    def _call_gdbus_bool(
+        self, method: str, args: list[str] | None = None
+    ) -> bool | None:
+        output = self._call_gdbus(method, args)
+        if not output:
+            return None
+        normalized = output.strip().lower()
+        if "true" in normalized or "(1," in normalized:
+            return True
+        if "false" in normalized or "(0," in normalized:
+            return False
+        logger.error(f"Failed to parse boolean from gdbus output: {output}")
+        return None
+
+    def _call_gdbus_int(self, method: str, args: list[str] | None = None) -> int | None:
+        output = self._call_gdbus(method, args)
+        if not output:
+            return None
+        match = re.search(r"int\d+\s+(-?\d+)", output)
+        if not match:
+            match = re.search(r"(-?\d+)", output)
+        if match:
+            try:
+                return int(match.group(1))
+            except ValueError:
+                pass
+        logger.error(f"Failed to parse integer from gdbus output: {output}")
+        return None
+
+    def _read_proc_comm(self, proc_path: Path) -> str:
         try:
-            bus = dbus.SessionBus()
-            obj = bus.get_object(
-                "org.guake3.RemoteControl", "/org/guake3/RemoteControl"
-            )
-            return dbus.Interface(obj, "org.guake3.RemoteControl")
-        except Exception as e:
-            logger.error(f"Failed to connect to Guake DBus: {e}")
+            return (proc_path / "comm").read_text().strip()
+        except (FileNotFoundError, ProcessLookupError, PermissionError, OSError):
+            return ""
+
+    def _read_proc_ppid(self, proc_path: Path) -> int | None:
+        status_path = proc_path / "status"
+        try:
+            for line in status_path.read_text().splitlines():
+                if line.startswith("PPid:"):
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        return int(parts[1])
+        except (
+            FileNotFoundError,
+            ProcessLookupError,
+            PermissionError,
+            OSError,
+            ValueError,
+        ):
+            pass
+        return None
+
+    def _read_proc_environ(self, proc_path: Path) -> dict[str, str]:
+        environ_path = proc_path / "environ"
+        try:
+            raw = environ_path.read_bytes()
+        except (FileNotFoundError, ProcessLookupError, PermissionError, OSError):
+            return {}
+
+        env: dict[str, str] = {}
+        for entry in raw.split(b"\0"):
+            if not entry:
+                continue
+            try:
+                key, value = entry.split(b"=", 1)
+            except ValueError:
+                continue
+            env[key.decode(errors="ignore")] = value.decode(errors="ignore")
+        return env
+
+    def _read_proc_cwd(self, proc_path: Path) -> str | None:
+        try:
+            return os.readlink(proc_path / "cwd")
+        except (FileNotFoundError, ProcessLookupError, PermissionError, OSError):
             return None
+
+    def _has_guake_ancestor(
+        self,
+        pid: int,
+        processes: dict[int, dict[str, object]],
+        guake_pids: set[int],
+    ) -> bool:
+        visited: set[int] = set()
+        current = pid
+
+        while True:
+            info = processes.get(current)
+            if not info:
+                return False
+
+            parent_pid = info.get("ppid")
+            if not isinstance(parent_pid, int) or parent_pid <= 1:
+                return False
+
+            if parent_pid in guake_pids:
+                return True
+
+            if parent_pid in visited:
+                return False
+
+            visited.add(parent_pid)
+            current = parent_pid
 
     def get_current_session_id(self) -> str | None:
         # Return current tab UUID from environment
@@ -65,59 +174,62 @@ class GuakeTerminal(BaseTerminal):
 
     def _get_shell_processes(self):
         """Get all shell processes running under Guake with their tab UUIDs and CWDs."""
-        sessions = []
+        proc_root = PROC_ROOT
+        if not proc_root.exists():
+            logger.warning(
+                "/proc filesystem not available; cannot inspect Guake sessions"
+            )
+            return []
 
-        if not HAS_PSUTIL:
-            logger.warning("psutil not available, cannot list sessions")
-            return sessions
+        processes: dict[int, dict[str, object]] = {}
+        guake_pids: set[int] = set()
 
         try:
-            # Find Guake process
-            guake_pids = [
-                p.pid
-                for p in psutil.process_iter(["name"])
-                if "guake" in p.info["name"].lower()
-            ]
+            for entry in proc_root.iterdir():
+                if not entry.name.isdigit():
+                    continue
+                pid = int(entry.name)
 
-            if not guake_pids:
-                logger.debug("No Guake processes found")
-                return sessions
+                name = self._read_proc_comm(entry)
+                if not name:
+                    continue
 
-            # Find all shell processes that are children of Guake
-            for proc in psutil.process_iter(["pid", "name", "ppid", "cwd"]):
-                try:
-                    if proc.info["name"] in ["bash", "zsh", "fish", "sh", "dash"]:
-                        # Check if it's a Guake child (direct or indirect)
-                        parent = proc.parent()
-                        while parent:
-                            if (
-                                parent.pid in guake_pids
-                                or "guake" in parent.name().lower()
-                            ):
-                                # Get environment to find GUAKE_TAB_UUID
-                                try:
-                                    env = proc.environ()
-                                    tab_uuid = env.get("GUAKE_TAB_UUID")
-                                    if tab_uuid:
-                                        sessions.append(
-                                            {
-                                                "tab_uuid": tab_uuid,
-                                                "cwd": proc.info["cwd"],
-                                                "pid": proc.info["pid"],
-                                            }
-                                        )
-                                except (psutil.AccessDenied, AttributeError):
-                                    pass
-                                break
-                            parent = parent.parent()
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    pass
+                ppid = self._read_proc_ppid(entry)
+                processes[pid] = {"ppid": ppid, "name": name, "path": entry}
 
-            return sessions
-
+                if "guake" in name.lower():
+                    guake_pids.add(pid)
         except Exception as e:
-            logger.error(f"Failed to get shell processes: {e}")
-            return sessions
+            logger.error(f"Failed to enumerate processes: {e}")
+            return []
+
+        if not guake_pids:
+            logger.debug("No Guake processes found")
+            return []
+
+        sessions = []
+        for pid, info in processes.items():
+            name = info["name"]
+            if name not in SHELL_PROCESS_NAMES:
+                continue
+
+            if not self._has_guake_ancestor(pid, processes, guake_pids):
+                continue
+
+            proc_path = info["path"]
+
+            env = self._read_proc_environ(proc_path)
+            tab_uuid = env.get("GUAKE_TAB_UUID")
+            if not tab_uuid:
+                continue
+
+            cwd = self._read_proc_cwd(proc_path)
+            if not cwd:
+                continue
+
+            sessions.append({"tab_uuid": tab_uuid, "cwd": cwd, "pid": pid})
+
+        return sessions
 
     def session_exists(self, session_id: str) -> bool:
         if not session_id:
@@ -149,62 +261,43 @@ class GuakeTerminal(BaseTerminal):
     ) -> bool:
         logger.debug(f"Switching to Guake tab: {session_id}")
 
-        iface = self._get_dbus_interface()
-        if not iface:
+        tab_index = self._call_gdbus_int("get_index_from_uuid", [session_id])
+        if tab_index is None or tab_index < 0:
+            logger.error(f"Tab with UUID {session_id} not found")
             return False
 
-        try:
-            # Get tab index from UUID
-            tab_index = iface.get_index_from_uuid(session_id)
-            if tab_index < 0:
-                logger.error(f"Tab with UUID {session_id} not found")
+        if not self._call_gdbus("select_tab", [str(tab_index)]):
+            return False
+
+        visibility = self._call_gdbus_bool("get_visibility")
+        if visibility is False:
+            if not self._call_gdbus("show"):
                 return False
 
-            # Select the tab
-            iface.select_tab(tab_index)
+        if session_init_script:
+            if not self._call_gdbus("execute_command", [session_init_script + "\n"]):
+                return False
 
-            # Make sure Guake is visible
-            if not iface.get_visibility():
-                iface.show()
-
-            # Execute script if provided
-            if session_init_script:
-                # Send the command to the terminal
-                iface.execute_command(session_init_script + "\n")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to switch to tab: {e}")
-            return False
+        return True
 
     def open_new_tab(
         self, working_directory: Path, session_init_script: str | None = None
     ) -> bool:
         logger.debug(f"Opening new Guake tab for {working_directory}")
 
-        iface = self._get_dbus_interface()
-        if not iface:
+        if not self._call_gdbus("add_tab", [str(working_directory)]):
             return False
 
-        try:
-            # Create new tab with working directory
-            iface.add_tab(str(working_directory))
+        visibility = self._call_gdbus_bool("get_visibility")
+        if visibility is False:
+            if not self._call_gdbus("show"):
+                return False
 
-            # Make sure Guake is visible
-            if not iface.get_visibility():
-                iface.show()
+        if session_init_script:
+            if not self._call_gdbus("execute_command", [session_init_script + "\n"]):
+                return False
 
-            # Execute script if provided
-            if session_init_script:
-                # The new tab should now be selected, execute command
-                iface.execute_command(session_init_script + "\n")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to create new tab: {e}")
-            return False
+        return True
 
     def open_new_window(
         self, working_directory: Path, session_init_script: str | None = None
@@ -271,15 +364,7 @@ class GuakeTerminal(BaseTerminal):
 
     def run_in_active_session(self, command: str) -> bool:
         logger.debug(f"Running command in active Guake tab: {command}")
-
-        iface = self._get_dbus_interface()
-        if not iface:
+        if not self._call_gdbus("execute_command", [command + "\n"]):
             return False
 
-        try:
-            iface.execute_command(command + "\n")
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to run command in active tab: {e}")
-            return False
+        return True

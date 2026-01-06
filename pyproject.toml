@@ -29,10 +29,6 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-guake = [
-    "dbus-python>=1.2.0",
-    "psutil>=5.0.0",
-]
 dev = [
     "pytest>=7.0.0",
     "ruff>=0.1.0",

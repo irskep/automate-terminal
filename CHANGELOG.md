@@ -8,6 +8,8 @@
 
 ### Changed
 
+- Guake no longer requires optional pip extras; it now shells out to the system `gdbus` binary with `/proc` inspection instead of using `dbus-python` and `psutil`
+
 ### Fixed
 
 ## 0.1.9 - 2026-01-03
