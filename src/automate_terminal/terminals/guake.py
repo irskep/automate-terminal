@@ -31,11 +31,6 @@ class GuakeTerminal(BaseTerminal):
         # Guake sets GUAKE_TAB_UUID environment variable
         return os.getenv("GUAKE_TAB_UUID") is not None and HAS_GDBUS
 
-    def _gvariant_string(self, value: str) -> str:
-        """Convert a Python string to a GVariant string literal."""
-        escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-        return f'string:"{escaped}"'
-
     def _call_gdbus(self, method: str, args: list[str] | None = None) -> str | None:
         """Invoke a Guake DBus method via gdbus and return raw output."""
         if not HAS_GDBUS:
@@ -71,9 +66,9 @@ class GuakeTerminal(BaseTerminal):
         if not output:
             return None
         normalized = output.strip().lower()
-        if "true" in normalized:
+        if "true" in normalized or "(1," in normalized:
             return True
-        if "false" in normalized:
+        if "false" in normalized or "(0," in normalized:
             return False
         logger.error(f"Failed to parse boolean from gdbus output: {output}")
         return None
@@ -266,14 +261,12 @@ class GuakeTerminal(BaseTerminal):
     ) -> bool:
         logger.debug(f"Switching to Guake tab: {session_id}")
 
-        tab_index = self._call_gdbus_int(
-            "get_index_from_uuid", [self._gvariant_string(session_id)]
-        )
+        tab_index = self._call_gdbus_int("get_index_from_uuid", [session_id])
         if tab_index is None or tab_index < 0:
             logger.error(f"Tab with UUID {session_id} not found")
             return False
 
-        if not self._call_gdbus("select_tab", [f"int32:{tab_index}"]):
+        if not self._call_gdbus("select_tab", [str(tab_index)]):
             return False
 
         visibility = self._call_gdbus_bool("get_visibility")
@@ -282,8 +275,7 @@ class GuakeTerminal(BaseTerminal):
                 return False
 
         if session_init_script:
-            command_arg = self._gvariant_string(session_init_script + "\n")
-            if not self._call_gdbus("execute_command", [command_arg]):
+            if not self._call_gdbus("execute_command", [session_init_script + "\n"]):
                 return False
 
         return True
@@ -293,9 +285,7 @@ class GuakeTerminal(BaseTerminal):
     ) -> bool:
         logger.debug(f"Opening new Guake tab for {working_directory}")
 
-        if not self._call_gdbus(
-            "add_tab", [self._gvariant_string(str(working_directory))]
-        ):
+        if not self._call_gdbus("add_tab", [str(working_directory)]):
             return False
 
         visibility = self._call_gdbus_bool("get_visibility")
@@ -304,8 +294,7 @@ class GuakeTerminal(BaseTerminal):
                 return False
 
         if session_init_script:
-            command_arg = self._gvariant_string(session_init_script + "\n")
-            if not self._call_gdbus("execute_command", [command_arg]):
+            if not self._call_gdbus("execute_command", [session_init_script + "\n"]):
                 return False
 
         return True
@@ -375,8 +364,7 @@ class GuakeTerminal(BaseTerminal):
 
     def run_in_active_session(self, command: str) -> bool:
         logger.debug(f"Running command in active Guake tab: {command}")
-        command_arg = self._gvariant_string(command + "\n")
-        if not self._call_gdbus("execute_command", [command_arg]):
+        if not self._call_gdbus("execute_command", [command + "\n"]):
             return False
 
         return True

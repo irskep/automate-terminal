@@ -101,3 +101,36 @@ def test_guake_run_in_active_session(monkeypatch, fake_applescript, fake_command
     # execute_command should have been invoked
     call = fake_command.executed_commands[-1]
     assert "execute_command" in " ".join(call[1])
+
+
+def test_guake_open_new_tab(monkeypatch, fake_applescript, fake_command, tmp_path):
+    """open_new_tab passes directory path directly without string: prefix."""
+    monkeypatch.setattr(guake_module, "HAS_GDBUS", True)
+
+    outputs = iter(["()", "(1,)"])
+
+    def fake_execute_r_with_output(cmd, timeout=10, description=None):
+        fake_command.executed_commands.append(
+            ("execute_r_with_output", cmd, timeout, description)
+        )
+        try:
+            return next(outputs)
+        except StopIteration:
+            return "()"
+
+    monkeypatch.setattr(
+        fake_command, "execute_r_with_output", fake_execute_r_with_output
+    )
+
+    terminal = GuakeTerminal(fake_applescript, fake_command)
+    target_dir = tmp_path / "project"
+    target_dir.mkdir()
+    assert terminal.open_new_tab(target_dir) is True
+
+    # add_tab should have been invoked with the path directly
+    add_tab_call = fake_command.executed_commands[0]
+    cmd_list = add_tab_call[1]
+    assert "add_tab" in " ".join(cmd_list)
+    # Verify the path is passed directly without "string:" prefix
+    assert str(target_dir) in cmd_list
+    assert f'string:"{target_dir}"' not in cmd_list
