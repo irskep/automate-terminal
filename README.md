@@ -39,7 +39,7 @@ For Guake terminal support on Linux:
 
 **Guake** requires only the `gdbus` command (usually provided by GLib/GIO) for DBus communication.
 
-Other terminals are not supported; `automate-terminal` will exit with an error code in unsupported terminals.
+Other terminals are not supported. `automate-terminal` will exit with an error code in unsupported terminals.
 
 ## Quick Start
 
