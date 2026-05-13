@@ -8,9 +8,18 @@ automate-terminal is a best-effort project. Some terminals do not support automa
 
 ## Installation
 
-Download a pre-built binary from [GitHub Releases](https://github.com/stevelandeyasleep/automate-terminal/releases) and put it on your PATH.
+```bash
+# mise (recommended)
+mise install ubi:stevelandeyasleep/automate-terminal
 
-Available platforms: darwin/arm64, linux/amd64, linux/arm64.
+# ubi
+ubi --project stevelandeyasleep/automate-terminal --in ~/bin
+
+# go install
+go install github.com/stevelandeyasleep/automate-terminal/cmd/automate-terminal@latest
+```
+
+Pre-built static binaries are also available on the [GitHub Releases](https://github.com/stevelandeyasleep/automate-terminal/releases) page for darwin/arm64, linux/amd64, and linux/arm64.
 
 For Guake terminal support on Linux, make sure the `gdbus` CLI from GLib/GIO is on your `PATH`. On most desktop distributions it already is; if you use a minimal system, install the GLib utilities package (e.g., `apt install libglib2.0-bin`, `dnf install glib2`, `pacman -S glib2`, or `apk add glib`).
 
