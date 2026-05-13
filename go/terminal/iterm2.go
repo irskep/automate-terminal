@@ -10,14 +10,14 @@ import (
 // ITerm2 implements Terminal for iTerm2 on macOS.
 type ITerm2 struct {
 	Base
-	AS     *exec.AppleScript
+	AppleScript *exec.AppleScript
 	Runner *exec.Runner
 }
 
 func (t *ITerm2) DisplayName() string { return "iTerm2" }
 
 func (t *ITerm2) Detect(termProgram string) bool {
-	return termProgram == "iTerm.app" && t.AS.Available()
+	return termProgram == "iTerm.app" && t.AppleScript.Available()
 }
 
 func (t *ITerm2) GetCurrentSessionID() *string {
@@ -67,7 +67,7 @@ tell application "iTerm2"
     end repeat
     return false
 end tell`
-	result, ok := t.AS.ExecuteWithResult(script)
+	result, ok := t.AppleScript.ExecuteWithResult(script)
 	return ok && result == "true"
 }
 
@@ -94,7 +94,7 @@ tell application "iTerm2"
         end repeat
     end repeat
 end tell`
-	return t.AS.Execute(script)
+	return t.AppleScript.Execute(script)
 }
 
 func (t *ITerm2) OpenNewTab(dir string, pasteScript *string) bool {
@@ -111,7 +111,7 @@ tell application "iTerm2"
         end tell
     end tell
 end tell`
-	return t.AS.Execute(script)
+	return t.AppleScript.Execute(script)
 }
 
 func (t *ITerm2) OpenNewWindow(dir string, pasteScript *string) bool {
@@ -126,7 +126,7 @@ tell application "iTerm2"
         write text "` + commands + `"
     end tell
 end tell`
-	return t.AS.Execute(script)
+	return t.AppleScript.Execute(script)
 }
 
 func (t *ITerm2) ListSessions() []Session {
@@ -154,7 +154,7 @@ tell application "iTerm2"
     end repeat
     return sessionData
 end tell`
-	output, ok := t.AS.ExecuteWithResult(script)
+	output, ok := t.AppleScript.ExecuteWithResult(script)
 	if !ok || output == "" {
 		return nil
 	}
@@ -187,7 +187,7 @@ tell application "iTerm2"
         write text "` + exec.Escape(command) + `"
     end tell
 end tell`
-	return t.AS.Execute(script)
+	return t.AppleScript.Execute(script)
 }
 
 var _ Terminal = (*ITerm2)(nil)

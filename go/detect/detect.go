@@ -46,10 +46,10 @@ func terminalFromOverride(name string, runner *exec.Runner, as *exec.AppleScript
 
 func overrideMap(runner *exec.Runner, as *exec.AppleScript) map[string]terminal.Terminal {
 	return map[string]terminal.Terminal{
-		"iterm2":       &terminal.ITerm2{AS: as, Runner: runner},
-		"terminal":     &terminal.TerminalApp{AS: as, Runner: runner},
-		"terminal.app": &terminal.TerminalApp{AS: as, Runner: runner},
-		"ghostty":      &terminal.Ghostty{AS: as, Runner: runner},
+		"iterm2":       &terminal.ITerm2{AppleScript: as, Runner: runner},
+		"terminal":     &terminal.TerminalApp{AppleScript: as, Runner: runner},
+		"terminal.app": &terminal.TerminalApp{AppleScript: as, Runner: runner},
+		"ghostty":      &terminal.Ghostty{AppleScript: as, Runner: runner},
 		"tmux":         &terminal.Tmux{Runner: runner},
 		"wezterm":      &terminal.WezTerm{Runner: runner},
 		"kitty":        &terminal.Kitty{Runner: runner},
@@ -68,9 +68,9 @@ func allTerminals(runner *exec.Runner, as *exec.AppleScript) []terminal.Terminal
 		&terminal.Guake{Runner: runner},
 		&terminal.WezTerm{Runner: runner},
 		&terminal.Kitty{Runner: runner},
-		&terminal.ITerm2{AS: as, Runner: runner},
-		&terminal.TerminalApp{AS: as, Runner: runner},
-		&terminal.Ghostty{AS: as, Runner: runner},
+		&terminal.ITerm2{AppleScript: as, Runner: runner},
+		&terminal.TerminalApp{AppleScript: as, Runner: runner},
+		&terminal.Ghostty{AppleScript: as, Runner: runner},
 		// Cursor before VSCode since both use TERM_PROGRAM=vscode.
 		&terminal.VSCode{Runner: runner, Variant: "cursor"},
 		&terminal.VSCode{Runner: runner, Variant: "vscode"},

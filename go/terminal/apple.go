@@ -10,14 +10,14 @@ import (
 // TerminalApp implements Terminal for macOS Terminal.app.
 type TerminalApp struct {
 	Base
-	AS     *exec.AppleScript
+	AppleScript *exec.AppleScript
 	Runner *exec.Runner
 }
 
 func (t *TerminalApp) DisplayName() string { return "Apple Terminal.app" }
 
 func (t *TerminalApp) Detect(termProgram string) bool {
-	return termProgram == "Apple_Terminal" && t.AS.Available()
+	return termProgram == "Apple_Terminal" && t.AppleScript.Available()
 }
 
 func (t *TerminalApp) GetCapabilities() Capabilities {
@@ -57,14 +57,14 @@ tell application "Terminal"
     end repeat
     return ""
 end tell`
-	windowName, ok := t.AS.ExecuteWithResult(findScript)
+	windowName, ok := t.AppleScript.ExecuteWithResult(findScript)
 	if !ok || windowName == "" {
 		return false
 	}
 
 	// Run init script if provided.
 	if pasteScript != nil {
-		t.AS.Execute(`
+		t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + exec.Escape(*pasteScript) + `" in front window
 end tell`)
@@ -83,7 +83,7 @@ tell application "System Events"
         end try
     end tell
 end tell`
-	result, ok := t.AS.ExecuteWithResult(switchScript)
+	result, ok := t.AppleScript.ExecuteWithResult(switchScript)
 	return ok && strings.HasPrefix(result, "success")
 }
 
@@ -108,14 +108,14 @@ func (t *TerminalApp) OpenNewTab(dir string, pasteScript *string) bool {
 	}
 
 	if windowCount == 0 {
-		return t.AS.Execute(`
+		return t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + escaped + `"
 end tell`)
 	}
 
 	// Try creating a tab via System Events (requires accessibility).
-	success := t.AS.Execute(`
+	success := t.AppleScript.Execute(`
 tell application "Terminal"
     activate
     tell application "System Events"
@@ -131,7 +131,7 @@ end tell`)
 		slog.Warn("Failed to create tab (missing accessibility permissions). " +
 			"Creating new window instead. To fix: Enable Terminal in " +
 			"System Settings -> Privacy & Security -> Accessibility")
-		return t.AS.Execute(`
+		return t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + escaped + `"
 end tell`)
@@ -144,7 +144,7 @@ func (t *TerminalApp) OpenNewWindow(dir string, pasteScript *string) bool {
 	if pasteScript != nil {
 		commands += "; " + *pasteScript
 	}
-	return t.AS.Execute(`
+	return t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + exec.Escape(commands) + `"
 end tell`)
@@ -173,7 +173,7 @@ tell application "Terminal"
     end repeat
     return sessionData
 end tell`
-	output, ok := t.AS.ExecuteWithResult(script)
+	output, ok := t.AppleScript.ExecuteWithResult(script)
 	if !ok || output == "" {
 		return nil
 	}
@@ -188,7 +188,7 @@ end tell`
 }
 
 func (t *TerminalApp) RunInActiveSession(command string) bool {
-	return t.AS.Execute(`
+	return t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + exec.Escape(command) + `" in selected tab of front window
 end tell`)

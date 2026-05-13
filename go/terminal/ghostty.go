@@ -10,14 +10,14 @@ import (
 // Ghostty has no AppleScript API; everything goes through System Events keyboard simulation.
 type Ghostty struct {
 	Base
-	AS     *exec.AppleScript
+	AppleScript *exec.AppleScript
 	Runner *exec.Runner
 }
 
 func (g *Ghostty) DisplayName() string { return "Ghostty" }
 
 func (g *Ghostty) Detect(termProgram string) bool {
-	return termProgram == "ghostty" && g.AS.Available()
+	return termProgram == "ghostty" && g.AppleScript.Available()
 }
 
 func (g *Ghostty) GetCapabilities() Capabilities {
@@ -39,7 +39,7 @@ func (g *Ghostty) OpenNewTab(dir string, pasteScript *string) bool {
 		commands += "; " + *pasteScript
 	}
 
-	success := g.AS.Execute(`
+	success := g.AppleScript.Execute(`
 tell application "Ghostty"
     activate
     tell application "System Events"
@@ -66,7 +66,7 @@ func (g *Ghostty) OpenNewWindow(dir string, pasteScript *string) bool {
 		commands += "; " + *pasteScript
 	}
 
-	return g.AS.Execute(`
+	return g.AppleScript.Execute(`
 tell application "Ghostty"
     activate
     tell application "System Events"
@@ -81,7 +81,7 @@ end tell`)
 }
 
 func (g *Ghostty) RunInActiveSession(command string) bool {
-	return g.AS.Execute(`
+	return g.AppleScript.Execute(`
 tell application "System Events"
     tell process "Ghostty"
         keystroke "` + exec.Escape(command) + `"
