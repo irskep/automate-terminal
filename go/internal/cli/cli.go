@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+
+	"github.com/stevelandeyasleep/automate-terminal/internal/detect"
+	"github.com/stevelandeyasleep/automate-terminal/internal/exec"
+	"github.com/stevelandeyasleep/automate-terminal/internal/terminal"
 )
 
 // Run is the main entry point. Returns an exit code.
@@ -89,6 +93,25 @@ func addPasteFlags(fs *flag.FlagSet) *pasteFlags {
 	return f
 }
 
+func (pf *pasteFlags) resolve(shellName string) *string {
+	specific := map[string]*string{
+		"bash":       strPtr(pf.pasteAndRunBash),
+		"zsh":        strPtr(pf.pasteAndRunZsh),
+		"fish":       strPtr(pf.pasteAndRunFish),
+		"powershell": strPtr(pf.pasteAndRunPowershell),
+		"nushell":    strPtr(pf.pasteAndRunNushell),
+	}
+	generic := strPtr(pf.pasteAndRun)
+	return ResolvePasteScript(shellName, generic, specific)
+}
+
+func strPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 func setupLogging(debug, dryRun bool) {
 	var level slog.Level
 	if debug {
@@ -102,87 +125,35 @@ func setupLogging(debug, dryRun bool) {
 	slog.SetDefault(slog.New(handler))
 }
 
-// Stub subcommand handlers. Each will be fleshed out in stage 4.
-
-func cmdCheck(args []string, version string) int {
-	fs := flag.NewFlagSet("check", flag.ContinueOnError)
-	output := fs.String("output", "text", "Output format: text, json, none")
-	debug := fs.Bool("debug", false, "Enable debug logging")
-	if err := fs.Parse(args); err != nil {
-		return 1
+func detectTerminal(runner *exec.Runner, outputFmt string) terminal.Terminal {
+	t := detect.Detect(runner)
+	if t == nil {
+		OutputError(outputFmt, "Terminal not supported", nil)
 	}
-	setupLogging(*debug, false)
-	_ = output
-	_ = version
-	// TODO: detect terminal + output capabilities
-	return 0
+	return t
 }
 
-func cmdNewTab(args []string) int {
-	fs := flag.NewFlagSet("new-tab", flag.ContinueOnError)
-	cf := addCommonFlags(fs)
-	pf := addPasteFlags(fs)
-	if err := fs.Parse(args); err != nil {
-		return 1
+func shellNameOrUnknown(t terminal.Terminal) string {
+	if s := t.GetShellName(); s != nil {
+		return *s
 	}
-	setupLogging(cf.debug, cf.dryRun)
-	_ = pf
-	// TODO
-	return 0
+	return "unknown"
 }
 
-func cmdNewWindow(args []string) int {
-	fs := flag.NewFlagSet("new-window", flag.ContinueOnError)
-	cf := addCommonFlags(fs)
-	pf := addPasteFlags(fs)
-	if err := fs.Parse(args); err != nil {
-		return 1
+func sessionIDOrNA(t terminal.Terminal) string {
+	if s := t.GetCurrentSessionID(); s != nil {
+		return *s
 	}
-	setupLogging(cf.debug, cf.dryRun)
-	_ = pf
-	// TODO
-	return 0
+	return "N/A"
 }
 
-func cmdSwitchTo(args []string) int {
-	fs := flag.NewFlagSet("switch-to", flag.ContinueOnError)
-	cf := addCommonFlags(fs)
-	pf := addPasteFlags(fs)
-	sessionID := fs.String("session-id", "", "Target session ID")
-	fs.StringVar(sessionID, "id", "", "Target session ID (alias)")
-	workingDir := fs.String("working-directory", "", "Target working directory")
-	fs.StringVar(workingDir, "wd", "", "Target working directory (alias)")
-	subdirOK := fs.Bool("subdirectory-ok", false, "Allow matching sessions in subdirectories")
-	if err := fs.Parse(args); err != nil {
-		return 1
+// pasteScriptExecuted returns the value for the paste_script_executed JSON field.
+// Returns nil (omit), true, or false.
+func pasteScriptExecuted(pasteScript *string, caps terminal.Capabilities) *bool {
+	if pasteScript == nil {
+		return nil
 	}
-	setupLogging(cf.debug, cf.dryRun)
-	_ = pf
-	_ = sessionID
-	_ = workingDir
-	_ = subdirOK
-	// TODO
-	return 0
+	v := caps.CanPasteCommands
+	return &v
 }
 
-func cmdListSessions(args []string) int {
-	fs := flag.NewFlagSet("list-sessions", flag.ContinueOnError)
-	cf := addCommonFlags(fs)
-	if err := fs.Parse(args); err != nil {
-		return 1
-	}
-	setupLogging(cf.debug, cf.dryRun)
-	// TODO
-	return 0
-}
-
-func cmdRunInActiveSession(args []string) int {
-	fs := flag.NewFlagSet("run-in-active-session", flag.ContinueOnError)
-	cf := addCommonFlags(fs)
-	if err := fs.Parse(args); err != nil {
-		return 1
-	}
-	setupLogging(cf.debug, cf.dryRun)
-	// TODO
-	return 0
-}

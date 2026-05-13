@@ -1,6 +1,10 @@
 package terminal
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+	"strings"
+)
 
 // Capabilities describes what a terminal backend can do.
 type Capabilities struct {
@@ -46,6 +50,8 @@ func (Base) GetCurrentSessionID() *string                           { return nil
 func (Base) SessionExists(string) bool                              { return false }
 func (Base) SwitchToSession(string, *string) bool                   { return false }
 func (Base) SwitchToSessionByWorkingDirectory(string, *string) bool { return false }
+func (Base) OpenNewTab(string, *string) bool                        { return false }
+func (Base) OpenNewWindow(string, *string) bool                     { return false }
 func (Base) ListSessions() []Session                                { return nil }
 func (Base) FindSessionByWorkingDirectory(string, bool) *string     { return nil }
 func (Base) RunInActiveSession(string) bool                         { return false }
@@ -56,11 +62,50 @@ func (Base) GetShellName() *string {
 	if shell == "" {
 		return nil
 	}
-	for i := len(shell) - 1; i >= 0; i-- {
-		if shell[i] == '/' {
-			s := shell[i+1:]
-			return &s
+	name := filepath.Base(shell)
+	return &name
+}
+
+// findSessionByDir matches sessions against a target directory path.
+// Resolves symlinks before comparing. Tries exact match first, then
+// subdirectory match if allowed.
+func findSessionByDir(sessions []Session, target string, subdirectoryOK bool) *string {
+	resolved, err := filepath.EvalSymlinks(target)
+	if err != nil {
+		resolved = target
+	}
+	resolved = filepath.Clean(resolved)
+
+	for _, s := range sessions {
+		sp := resolveClean(s.WorkingDirectory)
+		if sp == resolved {
+			id := s.SessionID
+			return &id
 		}
 	}
-	return &shell
+	if subdirectoryOK {
+		prefix := resolved + "/"
+		for _, s := range sessions {
+			sp := resolveClean(s.WorkingDirectory)
+			if strings.HasPrefix(sp, prefix) {
+				id := s.SessionID
+				return &id
+			}
+		}
+	}
+	return nil
+}
+
+// shellQuote wraps a string in single quotes for use in shell commands.
+// Interior single quotes are escaped via the '\'' idiom.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+func resolveClean(path string) string {
+	resolved, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return filepath.Clean(path)
+	}
+	return filepath.Clean(resolved)
 }
