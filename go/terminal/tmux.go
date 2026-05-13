@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/stevelandeyasleep/automate-terminal/internal/exec"
+	"github.com/stevelandeyasleep/automate-terminal/exec"
 )
 
 // Tmux implements Terminal for tmux sessions.

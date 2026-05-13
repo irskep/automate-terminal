@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	runner "github.com/stevelandeyasleep/automate-terminal/internal/exec"
+	runner "github.com/stevelandeyasleep/automate-terminal/exec"
 )
 
 const (

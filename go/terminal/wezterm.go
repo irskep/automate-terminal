@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/stevelandeyasleep/automate-terminal/internal/exec"
+	"github.com/stevelandeyasleep/automate-terminal/exec"
 )
 
 // WezTerm implements Terminal for WezTerm.

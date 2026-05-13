@@ -2,11 +2,21 @@
 
 <!-- loosely based on https://keepachangelog.com/en/1.0.0/ -->
 
-## 0.1.11 - Unreleased
+## 0.2.0 - Unreleased
 
 ### Added
 
+- Pre-built static binaries published to GitHub Releases for darwin/amd64,
+  darwin/arm64, linux/amd64, and linux/arm64. No runtime dependencies.
+- CI builds on every PR and push to main.
+
 ### Changed
+
+- Rewritten in Go. A public Go module API is planned; for now use the CLI.
+- Flags must come before positional arguments
+  (e.g. `automate-terminal new-tab --dry-run /path`).
+- Debug log output uses structured logging. The `--debug` and `--dry-run`
+  flags work the same way.
 
 ### Fixed
 

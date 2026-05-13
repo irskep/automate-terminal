@@ -8,18 +8,11 @@ automate-terminal is a best-effort project. Some terminals do not support automa
 
 ## Installation
 
-```bash
-pip install automate-terminal
-```
+Download a pre-built binary from [GitHub Releases](https://github.com/stevelandeyasleep/automate-terminal/releases) and put it on your PATH.
 
-```bash
-mise install pip:automate-terminal
-```
+Available platforms: darwin/amd64, darwin/arm64, linux/amd64, linux/arm64.
 
-For Guake terminal support on Linux:
-
-1. Install `automate-terminal` as usual (`pip install automate-terminal` or `mise install pip:automate-terminal`).
-2. Make sure the `gdbus` CLI from GLib/GIO is on your `PATH`. On most desktop distributions it already is; if you use a minimal system, install the GLib utilities package (e.g., `apt install libglib2.0-bin`, `dnf install glib2`, `pacman -S glib2`, or `apk add glib`).
+For Guake terminal support on Linux, make sure the `gdbus` CLI from GLib/GIO is on your `PATH`. On most desktop distributions it already is; if you use a minimal system, install the GLib utilities package (e.g., `apt install libglib2.0-bin`, `dnf install glib2`, `pacman -S glib2`, or `apk add glib`).
 
 ## Supported Terminals
 
@@ -56,8 +49,7 @@ automate-terminal new-tab /path/to/project
 automate-terminal switch-to --working-directory=/path/to/project
 
 # Create new window with initialization script
-automate-terminal new-window /path/to/project \
-  --paste-and-run="source .env && npm run dev"
+automate-terminal new-window --paste-and-run="source .env && npm run dev" /path/to/project
 
 # Run a command in the currently active session
 automate-terminal run-in-active-session "git status"
@@ -129,13 +121,13 @@ The term "paste" here means it will be _as if_ the user pasted text into the new
 ```bash
 automate-terminal new-tab /path/to/dir
 
-automate-terminal new-tab /path/to/dir --paste-and-run="echo 'I am in the new directory!'"
+automate-terminal new-tab --paste-and-run="echo 'I am in the new directory!'" /path/to/dir
 ```
 
 There are options to run additional scripts only in specific shells. This is useful if your wrapper tool needs to support multiple shells for workflows that require nontrivial shell commands.
 
 ```bash
-automate-terminal new-tab /path/to/dir --paste-and-run-fish="echo 'I am a fish shell user'"
+automate-terminal new-tab --paste-and-run-fish="echo 'I am a fish shell user'" /path/to/dir
 ```
 
 ### new-window
@@ -226,47 +218,32 @@ Shell-specific flags override generic `--paste-and-run` when detected shell matc
 
 Use `--dry-run` to see what commands would be executed without actually running them (AppleScript for macOS terminals, tmux CLI commands for tmux). Useful for debugging and understanding what the tool will do.
 
-## Python API
+## Go Module
 
-```python
-from automate_terminal import (
-    check,
-    new_tab,
-    new_window,
-    switch_to_session,
-    list_sessions,
-    get_current_session_id,
-    get_shell_name,
-    run_in_active_session,
-    TerminalNotFoundError,
+```
+go get github.com/stevelandeyasleep/automate-terminal
+```
+
+```go
+import (
+    "github.com/stevelandeyasleep/automate-terminal/detect"
+    "github.com/stevelandeyasleep/automate-terminal/exec"
+    "github.com/stevelandeyasleep/automate-terminal/terminal"
 )
 
-check(dry_run=False, debug=False) -> dict[str, str | Capabilities]
+runner := &exec.Runner{}
+t := detect.Detect(runner)
+if t == nil {
+    log.Fatal("unsupported terminal")
+}
 
-new_tab(working_directory, paste_script=None, dry_run=False, debug=False) -> bool
-
-new_window(
-  working_directory,
-  paste_script=None,
-  dry_run=False,
-  debug=False) -> bool
-
-switch_to_session(
-  session_id=None,
-  working_directory=None,
-  paste_script=None,
-  subdirectory_ok=False,
-  dry_run=False,
-  debug=False) -> bool
-
-list_sessions(dry_run=False, debug=False) -> list[dict[str, str]]
-
-get_current_session_id(dry_run=False, debug=False) -> str | None
-
-get_shell_name(dry_run=False, debug=False) -> str | None
-
-run_in_active_session(command, dry_run=False, debug=False) -> bool
+caps := t.GetCapabilities()
+t.OpenNewTab("/path/to/dir", nil)
+sessions := t.ListSessions()
+t.RunInActiveSession("git status")
 ```
+
+See `terminal/terminal.go` for the full `Terminal` interface.
 
 ## References
 

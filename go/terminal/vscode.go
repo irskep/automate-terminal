@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	runner "github.com/stevelandeyasleep/automate-terminal/internal/exec"
+	runner "github.com/stevelandeyasleep/automate-terminal/exec"
 )
 
 // VSCode implements Terminal for Visual Studio Code and Cursor.
