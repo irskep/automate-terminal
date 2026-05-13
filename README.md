@@ -10,7 +10,7 @@ automate-terminal is a best-effort project. Some terminals do not support automa
 
 Download a pre-built binary from [GitHub Releases](https://github.com/stevelandeyasleep/automate-terminal/releases) and put it on your PATH.
 
-Available platforms: darwin/amd64, darwin/arm64, linux/amd64, linux/arm64.
+Available platforms: darwin/arm64, linux/amd64, linux/arm64.
 
 For Guake terminal support on Linux, make sure the `gdbus` CLI from GLib/GIO is on your `PATH`. On most desktop distributions it already is; if you use a minimal system, install the GLib utilities package (e.g., `apt install libglib2.0-bin`, `dnf install glib2`, `pacman -S glib2`, or `apk add glib`).
 

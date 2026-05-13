@@ -12,8 +12,6 @@ jobs:
       matrix:
         include:
           - goos: darwin
-            goarch: amd64
-          - goos: darwin
             goarch: arm64
           - goos: linux
             goarch: amd64
