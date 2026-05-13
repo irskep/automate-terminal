@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -10,12 +11,24 @@ import (
 	"github.com/irskep/automate-terminal/terminal"
 )
 
+// parseFlags parses a FlagSet and returns the appropriate exit code.
+// Returns -1 to continue, 0 for --help, 1 for errors.
+func parseFlags(fs *flag.FlagSet, args []string) int {
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return 0
+		}
+		return 1
+	}
+	return -1
+}
+
 func cmdCheck(args []string, version string) int {
 	fs := flag.NewFlagSet("check", flag.ContinueOnError)
 	output := fs.String("output", "text", "Output format: text, json, none")
 	debug := fs.Bool("debug", false, "Enable debug logging")
-	if err := fs.Parse(args); err != nil {
-		return 1
+	if rc := parseFlags(fs, args); rc >= 0 {
+		return rc
 	}
 	setupLogging(*debug, false)
 
@@ -108,8 +121,8 @@ func cmdNewTab(args []string) int {
 	fs := flag.NewFlagSet("new-tab", flag.ContinueOnError)
 	cf := addCommonFlags(fs)
 	pf := addPasteFlags(fs)
-	if err := fs.Parse(args); err != nil {
-		return 1
+	if rc := parseFlags(fs, args); rc >= 0 {
+		return rc
 	}
 	setupLogging(cf.debug, cf.dryRun)
 
@@ -158,8 +171,8 @@ func cmdNewWindow(args []string) int {
 	fs := flag.NewFlagSet("new-window", flag.ContinueOnError)
 	cf := addCommonFlags(fs)
 	pf := addPasteFlags(fs)
-	if err := fs.Parse(args); err != nil {
-		return 1
+	if rc := parseFlags(fs, args); rc >= 0 {
+		return rc
 	}
 	setupLogging(cf.debug, cf.dryRun)
 
@@ -214,8 +227,8 @@ func cmdSwitchTo(args []string) int {
 	fs.StringVar(&workingDir, "working-directory", "", "Target working directory")
 	fs.StringVar(&workingDir, "wd", "", "Target working directory (alias)")
 	subdirOK := fs.Bool("subdirectory-ok", false, "Allow matching sessions in subdirectories")
-	if err := fs.Parse(args); err != nil {
-		return 1
+	if rc := parseFlags(fs, args); rc >= 0 {
+		return rc
 	}
 	setupLogging(cf.debug, cf.dryRun)
 
@@ -284,8 +297,8 @@ func cmdSwitchTo(args []string) int {
 func cmdListSessions(args []string) int {
 	fs := flag.NewFlagSet("list-sessions", flag.ContinueOnError)
 	cf := addCommonFlags(fs)
-	if err := fs.Parse(args); err != nil {
-		return 1
+	if rc := parseFlags(fs, args); rc >= 0 {
+		return rc
 	}
 	setupLogging(cf.debug, cf.dryRun)
 
@@ -335,8 +348,8 @@ func cmdListSessions(args []string) int {
 func cmdRunInActiveSession(args []string) int {
 	fs := flag.NewFlagSet("run-in-active-session", flag.ContinueOnError)
 	cf := addCommonFlags(fs)
-	if err := fs.Parse(args); err != nil {
-		return 1
+	if rc := parseFlags(fs, args); rc >= 0 {
+		return rc
 	}
 	setupLogging(cf.debug, cf.dryRun)
 

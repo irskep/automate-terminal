@@ -13,14 +13,14 @@ import (
 
 // Run is the main entry point. Returns an exit code.
 func Run(args []string, version string) int {
-	if len(args) > 0 && (args[0] == "--version" || args[0] == "-version") {
-		fmt.Printf("automate-terminal %s\n", version)
+	if len(args) == 0 || args[0] == "--help" || args[0] == "-help" || args[0] == "-h" {
+		printUsage()
 		return 0
 	}
 
-	if len(args) == 0 {
-		printUsage()
-		return 1
+	if args[0] == "--version" || args[0] == "-version" {
+		fmt.Printf("automate-terminal %s\n", version)
+		return 0
 	}
 
 	command := args[0]
@@ -40,6 +40,7 @@ func Run(args []string, version string) int {
 	case "run-in-active-session":
 		return cmdRunInActiveSession(rest)
 	default:
+		fmt.Fprintf(os.Stderr, "Unknown command: %s\n\n", command)
 		printUsage()
 		return 1
 	}
