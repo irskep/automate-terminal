@@ -25,3 +25,7 @@ test = "uv run pytest"
 lint = "uv run ruff check"
 format = "uv run ruff format"
 format-check = "uv run ruff format --check"
+
+"go:build" = "cd go && go build ./..."
+"go:vet" = "cd go && go vet ./..."
+"go:run" = "cd go && go run ./cmd/automate-terminal"
