@@ -19,7 +19,7 @@ ubi --project stevelandeyasleep/automate-terminal --in ~/bin
 go install github.com/stevelandeyasleep/automate-terminal/cmd/automate-terminal@latest
 ```
 
-Pre-built static binaries are also available on the [GitHub Releases](https://github.com/stevelandeyasleep/automate-terminal/releases) page for darwin/arm64, linux/amd64, and linux/arm64.
+Pre-built static binaries are also available on the [GitHub Releases](https://github.com/stevelandeyasleep/automate-terminal/releases) page for macOS and Linux.
 
 For Guake terminal support on Linux, make sure the `gdbus` CLI from GLib/GIO is on your `PATH`. On most desktop distributions it already is; if you use a minimal system, install the GLib utilities package (e.g., `apt install libglib2.0-bin`, `dnf install glib2`, `pacman -S glib2`, or `apk add glib`).
 
