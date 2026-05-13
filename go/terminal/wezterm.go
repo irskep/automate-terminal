@@ -18,7 +18,7 @@ type WezTerm struct {
 
 func (w *WezTerm) DisplayName() string { return "WezTerm" }
 
-func (w *WezTerm) Detect(termProgram string, platform string) bool {
+func (w *WezTerm) Detect(termProgram string) bool {
 	return os.Getenv("WEZTERM_PANE") != ""
 }
 

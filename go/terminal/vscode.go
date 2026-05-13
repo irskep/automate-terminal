@@ -29,7 +29,7 @@ func (v *VSCode) cliCommand() string {
 	return "code"
 }
 
-func (v *VSCode) Detect(termProgram string, platform string) bool {
+func (v *VSCode) Detect(termProgram string) bool {
 	if termProgram != "vscode" {
 		return false
 	}

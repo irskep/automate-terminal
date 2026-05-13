@@ -16,8 +16,8 @@ type TerminalApp struct {
 
 func (t *TerminalApp) DisplayName() string { return "Apple Terminal.app" }
 
-func (t *TerminalApp) Detect(termProgram string, platform string) bool {
-	return platform == "darwin" && termProgram == "Apple_Terminal"
+func (t *TerminalApp) Detect(termProgram string) bool {
+	return termProgram == "Apple_Terminal" && t.AS.Available()
 }
 
 func (t *TerminalApp) GetCapabilities() Capabilities {

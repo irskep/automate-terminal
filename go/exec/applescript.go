@@ -2,19 +2,26 @@ package exec
 
 import (
 	"log/slog"
-	"runtime"
+	"os/exec"
 	"strings"
 )
 
-// AppleScript runs AppleScript via osascript. Only functional on Darwin.
+// AppleScript runs AppleScript via osascript. Only functional when osascript
+// is available on PATH.
 type AppleScript struct {
 	Runner *Runner
 }
 
+// Available reports whether osascript is on PATH.
+func (a *AppleScript) Available() bool {
+	_, err := exec.LookPath("osascript")
+	return err == nil
+}
+
 // Execute runs an AppleScript and returns whether it succeeded.
 func (a *AppleScript) Execute(script string) bool {
-	if runtime.GOOS != "darwin" {
-		slog.Warn("AppleScript not available on this platform")
+	if !a.Available() {
+		slog.Warn("osascript not found on PATH")
 		return false
 	}
 	if a.Runner.DryRun {
@@ -27,8 +34,8 @@ func (a *AppleScript) Execute(script string) bool {
 // ExecuteWithResult runs an AppleScript and returns its output.
 // Executes even in dry-run mode since it is a read-only query.
 func (a *AppleScript) ExecuteWithResult(script string) (string, bool) {
-	if runtime.GOOS != "darwin" {
-		slog.Warn("AppleScript not available on this platform")
+	if !a.Available() {
+		slog.Warn("osascript not found on PATH")
 		return "", false
 	}
 	if a.Runner.DryRun {

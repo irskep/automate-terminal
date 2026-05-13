@@ -18,7 +18,7 @@ type Kitty struct {
 
 func (k *Kitty) DisplayName() string { return "Kitty" }
 
-func (k *Kitty) Detect(termProgram string, platform string) bool {
+func (k *Kitty) Detect(termProgram string) bool {
 	return os.Getenv("KITTY_WINDOW_ID") != ""
 }
 

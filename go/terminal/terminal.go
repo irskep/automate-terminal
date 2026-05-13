@@ -36,8 +36,8 @@ type Terminal interface {
 	DisplayName() string
 
 	// Detect reports whether this backend matches the current environment.
-	// termProgram is the value of TERM_PROGRAM; platform is runtime.GOOS.
-	Detect(termProgram string, platform string) bool
+	// termProgram is the value of TERM_PROGRAM.
+	Detect(termProgram string) bool
 
 	// GetCurrentSessionID returns a unique identifier for the active session,
 	// or nil if the backend cannot determine one.

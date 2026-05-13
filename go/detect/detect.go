@@ -5,7 +5,6 @@ package detect
 import (
 	"log/slog"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/irskep/automate-terminal/exec"
@@ -16,7 +15,6 @@ import (
 func Detect(runner *exec.Runner) terminal.Terminal {
 	as := &exec.AppleScript{Runner: runner}
 	termProgram := os.Getenv("TERM_PROGRAM")
-	platform := runtime.GOOS
 
 	// Check for override first.
 	if override := os.Getenv("AUTOMATE_TERMINAL_OVERRIDE"); override != "" {
@@ -31,13 +29,13 @@ func Detect(runner *exec.Runner) terminal.Terminal {
 
 	// Ordered detection. First match wins.
 	for _, t := range allTerminals(runner, as) {
-		if t.Detect(termProgram, platform) {
+		if t.Detect(termProgram) {
 			slog.Debug("Detected terminal", "name", t.DisplayName())
 			return t
 		}
 	}
 
-	slog.Warn("Unsupported terminal", "TERM_PROGRAM", termProgram, "platform", platform)
+	slog.Warn("Unsupported terminal", "TERM_PROGRAM", termProgram)
 	return nil
 }
 

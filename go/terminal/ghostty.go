@@ -16,8 +16,8 @@ type Ghostty struct {
 
 func (g *Ghostty) DisplayName() string { return "Ghostty" }
 
-func (g *Ghostty) Detect(termProgram string, platform string) bool {
-	return platform == "darwin" && termProgram == "ghostty"
+func (g *Ghostty) Detect(termProgram string) bool {
+	return termProgram == "ghostty" && g.AS.Available()
 }
 
 func (g *Ghostty) GetCapabilities() Capabilities {

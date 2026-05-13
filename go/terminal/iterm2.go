@@ -16,8 +16,8 @@ type ITerm2 struct {
 
 func (t *ITerm2) DisplayName() string { return "iTerm2" }
 
-func (t *ITerm2) Detect(termProgram string, platform string) bool {
-	return platform == "darwin" && termProgram == "iTerm.app"
+func (t *ITerm2) Detect(termProgram string) bool {
+	return termProgram == "iTerm.app" && t.AS.Available()
 }
 
 func (t *ITerm2) GetCurrentSessionID() *string {

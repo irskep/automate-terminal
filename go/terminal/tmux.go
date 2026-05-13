@@ -16,7 +16,7 @@ type Tmux struct {
 
 func (t *Tmux) DisplayName() string { return "tmux" }
 
-func (t *Tmux) Detect(termProgram string, platform string) bool {
+func (t *Tmux) Detect(termProgram string) bool {
 	return os.Getenv("TMUX") != ""
 }
 

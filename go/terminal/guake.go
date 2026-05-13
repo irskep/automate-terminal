@@ -39,7 +39,7 @@ func (g *Guake) procRoot() string {
 
 func (g *Guake) DisplayName() string { return "Guake" }
 
-func (g *Guake) Detect(termProgram string, platform string) bool {
+func (g *Guake) Detect(termProgram string) bool {
 	if os.Getenv("GUAKE_TAB_UUID") == "" {
 		return false
 	}
