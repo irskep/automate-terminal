@@ -1,7 +1,7 @@
 package terminal
 
 import (
-	"log/slog"
+	"errors"
 	"strings"
 
 	"github.com/irskep/automate-terminal/exec"
@@ -11,7 +11,7 @@ import (
 type TerminalApp struct {
 	Base
 	AppleScript *exec.AppleScript
-	Runner *exec.Runner
+	Runner      *exec.Runner
 }
 
 func (t *TerminalApp) DisplayName() string { return "Apple Terminal.app" }
@@ -33,10 +33,9 @@ func (t *TerminalApp) GetCapabilities() Capabilities {
 	}
 }
 
-func (t *TerminalApp) SwitchToSessionByWorkingDirectory(dir string, pasteScript *string) bool {
+func (t *TerminalApp) SwitchToSessionByWorkingDirectory(dir string, pasteScript *string) error {
 	escaped := exec.Escape(dir)
 
-	// Find the window containing a tab whose shell is in the target directory.
 	findScript := `
 tell application "Terminal"
     repeat with theWindow in windows
@@ -59,10 +58,9 @@ tell application "Terminal"
 end tell`
 	windowName, ok := t.AppleScript.ExecuteWithResult(findScript)
 	if !ok || windowName == "" {
-		return false
+		return errors.New("no Terminal.app window found with that working directory")
 	}
 
-	// Run init script if provided.
 	if pasteScript != nil {
 		t.AppleScript.Execute(`
 tell application "Terminal"
@@ -70,7 +68,6 @@ tell application "Terminal"
 end tell`)
 	}
 
-	// Use System Events to click the window menu item.
 	escapedName := exec.Escape(windowName)
 	switchScript := `
 tell application "System Events"
@@ -84,17 +81,19 @@ tell application "System Events"
     end tell
 end tell`
 	result, ok := t.AppleScript.ExecuteWithResult(switchScript)
-	return ok && strings.HasPrefix(result, "success")
+	if !ok || !strings.HasPrefix(result, "success") {
+		return errors.New("failed to switch Terminal.app window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+	}
+	return nil
 }
 
-func (t *TerminalApp) OpenNewTab(dir string, pasteScript *string) bool {
+func (t *TerminalApp) OpenNewTab(dir string, pasteScript *string) error {
 	commands := "cd " + shellQuote(dir)
 	if pasteScript != nil {
 		commands += "; " + *pasteScript
 	}
 	escaped := exec.Escape(commands)
 
-	// Check if any windows exist.
 	countResult, ok := t.Runner.ExecuteRWithOutput(
 		[]string{"osascript", "-e", `tell application "Terminal" to return count of windows`},
 	)
@@ -108,13 +107,15 @@ func (t *TerminalApp) OpenNewTab(dir string, pasteScript *string) bool {
 	}
 
 	if windowCount == 0 {
-		return t.AppleScript.Execute(`
+		if !t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + escaped + `"
-end tell`)
+end tell`) {
+			return errors.New("Terminal.app AppleScript failed to create window")
+		}
+		return nil
 	}
 
-	// Try creating a tab via System Events (requires accessibility).
 	success := t.AppleScript.Execute(`
 tell application "Terminal"
     activate
@@ -128,26 +129,29 @@ tell application "Terminal"
 end tell`)
 
 	if !success {
-		slog.Warn("Failed to create tab (missing accessibility permissions). " +
-			"Creating new window instead. To fix: Enable Terminal in " +
-			"System Settings -> Privacy & Security -> Accessibility")
-		return t.AppleScript.Execute(`
+		// Fall back to creating a window instead of a tab.
+		if !t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + escaped + `"
-end tell`)
+end tell`) {
+			return errors.New("Terminal.app failed to create tab or window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+		}
 	}
-	return true
+	return nil
 }
 
-func (t *TerminalApp) OpenNewWindow(dir string, pasteScript *string) bool {
+func (t *TerminalApp) OpenNewWindow(dir string, pasteScript *string) error {
 	commands := "cd " + shellQuote(dir)
 	if pasteScript != nil {
 		commands += "; " + *pasteScript
 	}
-	return t.AppleScript.Execute(`
+	if !t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + exec.Escape(commands) + `"
-end tell`)
+end tell`) {
+		return errors.New("Terminal.app AppleScript failed to create window")
+	}
+	return nil
 }
 
 func (t *TerminalApp) ListSessions() []Session {
@@ -187,11 +191,14 @@ end tell`
 	return sessions
 }
 
-func (t *TerminalApp) RunInActiveSession(command string) bool {
-	return t.AppleScript.Execute(`
+func (t *TerminalApp) RunInActiveSession(command string) error {
+	if !t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + exec.Escape(command) + `" in selected tab of front window
-end tell`)
+end tell`) {
+		return errors.New("Terminal.app AppleScript failed to send command to active session")
+	}
+	return nil
 }
 
 var _ Terminal = (*TerminalApp)(nil)

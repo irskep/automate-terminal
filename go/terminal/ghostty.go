@@ -1,7 +1,7 @@
 package terminal
 
 import (
-	"log/slog"
+	"errors"
 
 	"github.com/irskep/automate-terminal/exec"
 )
@@ -11,7 +11,7 @@ import (
 type Ghostty struct {
 	Base
 	AppleScript *exec.AppleScript
-	Runner *exec.Runner
+	Runner      *exec.Runner
 }
 
 func (g *Ghostty) DisplayName() string { return "Ghostty" }
@@ -33,13 +33,13 @@ func (g *Ghostty) GetCapabilities() Capabilities {
 	}
 }
 
-func (g *Ghostty) OpenNewTab(dir string, pasteScript *string) bool {
+func (g *Ghostty) OpenNewTab(dir string, pasteScript *string) error {
 	commands := "cd " + shellQuote(dir)
 	if pasteScript != nil {
 		commands += "; " + *pasteScript
 	}
 
-	success := g.AppleScript.Execute(`
+	if !g.AppleScript.Execute(`
 tell application "Ghostty"
     activate
     tell application "System Events"
@@ -50,23 +50,19 @@ tell application "Ghostty"
             key code 36 -- Return
         end tell
     end tell
-end tell`)
-
-	if !success {
-		slog.Warn("Failed to create tab (missing accessibility permissions). " +
-			"To fix: Enable Terminal in " +
-			"System Settings -> Privacy & Security -> Accessibility")
+end tell`) {
+		return errors.New("Ghostty failed to create tab (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
 	}
-	return success
+	return nil
 }
 
-func (g *Ghostty) OpenNewWindow(dir string, pasteScript *string) bool {
+func (g *Ghostty) OpenNewWindow(dir string, pasteScript *string) error {
 	commands := "cd " + shellQuote(dir)
 	if pasteScript != nil {
 		commands += "; " + *pasteScript
 	}
 
-	return g.AppleScript.Execute(`
+	if !g.AppleScript.Execute(`
 tell application "Ghostty"
     activate
     tell application "System Events"
@@ -77,17 +73,23 @@ tell application "Ghostty"
             key code 36 -- Return
         end tell
     end tell
-end tell`)
+end tell`) {
+		return errors.New("Ghostty failed to create window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+	}
+	return nil
 }
 
-func (g *Ghostty) RunInActiveSession(command string) bool {
-	return g.AppleScript.Execute(`
+func (g *Ghostty) RunInActiveSession(command string) error {
+	if !g.AppleScript.Execute(`
 tell application "System Events"
     tell process "Ghostty"
         keystroke "` + exec.Escape(command) + `"
         key code 36
     end tell
-end tell`)
+end tell`) {
+		return errors.New("Ghostty failed to send command (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+	}
+	return nil
 }
 
 var _ Terminal = (*Ghostty)(nil)

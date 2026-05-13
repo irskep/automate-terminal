@@ -4,6 +4,7 @@
 package terminal
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,20 +56,20 @@ type Terminal interface {
 
 	// SwitchToSession activates the session with the given ID.
 	// If pasteScript is non-nil, the script is sent to the session after switching.
-	SwitchToSession(sessionID string, pasteScript *string) bool
+	SwitchToSession(sessionID string, pasteScript *string) error
 
 	// SwitchToSessionByWorkingDirectory activates a session whose working
 	// directory matches dir. Used by backends like Terminal.app that lack
 	// session IDs.
-	SwitchToSessionByWorkingDirectory(dir string, pasteScript *string) bool
+	SwitchToSessionByWorkingDirectory(dir string, pasteScript *string) error
 
 	// OpenNewTab creates a new tab in dir. If pasteScript is non-nil, the
 	// script is sent to the new tab.
-	OpenNewTab(dir string, pasteScript *string) bool
+	OpenNewTab(dir string, pasteScript *string) error
 
 	// OpenNewWindow creates a new window in dir. If pasteScript is non-nil,
 	// the script is sent to the new window.
-	OpenNewWindow(dir string, pasteScript *string) bool
+	OpenNewWindow(dir string, pasteScript *string) error
 
 	// ListSessions returns all open sessions the backend knows about.
 	ListSessions() []Session
@@ -81,22 +82,26 @@ type Terminal interface {
 
 	// RunInActiveSession sends command to the currently active session
 	// as if the user typed it.
-	RunInActiveSession(command string) bool
+	RunInActiveSession(command string) error
 }
+
+// ErrNotSupported is returned by Base default implementations for operations
+// the backend does not support.
+var ErrNotSupported = errors.New("operation not supported by this terminal")
 
 // Base provides default no-op implementations for optional Terminal methods.
 // Embed this in backend structs to avoid repeating boilerplate.
 type Base struct{}
 
-func (Base) GetCurrentSessionID() *string                           { return nil }
-func (Base) SessionExists(string) bool                              { return false }
-func (Base) SwitchToSession(string, *string) bool                   { return false }
-func (Base) SwitchToSessionByWorkingDirectory(string, *string) bool { return false }
-func (Base) OpenNewTab(string, *string) bool                        { return false }
-func (Base) OpenNewWindow(string, *string) bool                     { return false }
-func (Base) ListSessions() []Session                                { return nil }
-func (Base) FindSessionByWorkingDirectory(string, bool) *string     { return nil }
-func (Base) RunInActiveSession(string) bool                         { return false }
+func (Base) GetCurrentSessionID() *string                              { return nil }
+func (Base) SessionExists(string) bool                                 { return false }
+func (Base) SwitchToSession(string, *string) error                     { return ErrNotSupported }
+func (Base) SwitchToSessionByWorkingDirectory(string, *string) error   { return ErrNotSupported }
+func (Base) OpenNewTab(string, *string) error                          { return ErrNotSupported }
+func (Base) OpenNewWindow(string, *string) error                       { return ErrNotSupported }
+func (Base) ListSessions() []Session                                   { return nil }
+func (Base) FindSessionByWorkingDirectory(string, bool) *string        { return nil }
+func (Base) RunInActiveSession(string) error                           { return ErrNotSupported }
 
 // GetShellName returns the basename of the SHELL environment variable.
 func (Base) GetShellName() *string {

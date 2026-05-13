@@ -2,6 +2,8 @@ package terminal
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
@@ -55,33 +57,41 @@ func (k *Kitty) SessionExists(sessionID string) bool {
 	return false
 }
 
-func (k *Kitty) SwitchToSession(sessionID string, pasteScript *string) bool {
+func (k *Kitty) SwitchToSession(sessionID string, pasteScript *string) error {
 	match := "id:" + sessionID
 	if !k.Runner.ExecuteRW([]string{"kitten", "@", "focus-window", "--match", match}) {
-		return false
+		return fmt.Errorf("kitten @ focus-window failed for window %s (is allow_remote_control enabled in kitty.conf?)", sessionID)
 	}
 	if pasteScript != nil {
-		return k.Runner.ExecuteRW([]string{
+		if !k.Runner.ExecuteRW([]string{
 			"kitten", "@", "send-text", "--match", match, *pasteScript + "\n",
-		})
+		}) {
+			return errors.New("kitten @ send-text failed")
+		}
 	}
-	return true
+	return nil
 }
 
-func (k *Kitty) OpenNewTab(dir string, pasteScript *string) bool {
+func (k *Kitty) OpenNewTab(dir string, pasteScript *string) error {
 	cmd := []string{"kitten", "@", "launch", "--type=tab", "--cwd", dir}
 	if pasteScript != nil {
 		cmd = append(cmd, "sh", "-c", "cd "+dir+" && "+*pasteScript)
 	}
-	return k.Runner.ExecuteRW(cmd)
+	if !k.Runner.ExecuteRW(cmd) {
+		return errors.New("kitten @ launch --type=tab failed (is allow_remote_control enabled in kitty.conf?)")
+	}
+	return nil
 }
 
-func (k *Kitty) OpenNewWindow(dir string, pasteScript *string) bool {
+func (k *Kitty) OpenNewWindow(dir string, pasteScript *string) error {
 	cmd := []string{"kitten", "@", "launch", "--type=os-window", "--cwd", dir}
 	if pasteScript != nil {
 		cmd = append(cmd, "sh", "-c", "cd "+dir+" && "+*pasteScript)
 	}
-	return k.Runner.ExecuteRW(cmd)
+	if !k.Runner.ExecuteRW(cmd) {
+		return errors.New("kitten @ launch --type=os-window failed (is allow_remote_control enabled in kitty.conf?)")
+	}
+	return nil
 }
 
 func (k *Kitty) ListSessions() []Session {
@@ -102,15 +112,17 @@ func (k *Kitty) FindSessionByWorkingDirectory(target string, subdirectoryOK bool
 	return findSessionByDir(k.ListSessions(), target, subdirectoryOK)
 }
 
-func (k *Kitty) RunInActiveSession(command string) bool {
+func (k *Kitty) RunInActiveSession(command string) error {
 	wid := k.GetCurrentSessionID()
 	if wid == nil {
-		slog.Error("Could not determine current Kitty window")
-		return false
+		return errors.New("could not determine current Kitty window (KITTY_WINDOW_ID not set)")
 	}
-	return k.Runner.ExecuteRW([]string{
+	if !k.Runner.ExecuteRW([]string{
 		"kitten", "@", "send-text", "--match", "id:" + *wid, command + "\n",
-	})
+	}) {
+		return errors.New("kitten @ send-text failed (is allow_remote_control enabled in kitty.conf?)")
+	}
+	return nil
 }
 
 var _ Terminal = (*Kitty)(nil)

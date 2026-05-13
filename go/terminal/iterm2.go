@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"errors"
 	"os"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 type ITerm2 struct {
 	Base
 	AppleScript *exec.AppleScript
-	Runner *exec.Runner
+	Runner      *exec.Runner
 }
 
 func (t *ITerm2) DisplayName() string { return "iTerm2" }
@@ -71,7 +72,7 @@ end tell`
 	return ok && result == "true"
 }
 
-func (t *ITerm2) SwitchToSession(sessionID string, pasteScript *string) bool {
+func (t *ITerm2) SwitchToSession(sessionID string, pasteScript *string) error {
 	uuid := extractUUID(sessionID)
 	script := `
 tell application "iTerm2"
@@ -94,10 +95,13 @@ tell application "iTerm2"
         end repeat
     end repeat
 end tell`
-	return t.AppleScript.Execute(script)
+	if !t.AppleScript.Execute(script) {
+		return errors.New("iTerm2 AppleScript failed to switch session")
+	}
+	return nil
 }
 
-func (t *ITerm2) OpenNewTab(dir string, pasteScript *string) bool {
+func (t *ITerm2) OpenNewTab(dir string, pasteScript *string) error {
 	commands := "cd " + exec.Escape(dir)
 	if pasteScript != nil {
 		commands += "; " + exec.Escape(*pasteScript)
@@ -111,10 +115,13 @@ tell application "iTerm2"
         end tell
     end tell
 end tell`
-	return t.AppleScript.Execute(script)
+	if !t.AppleScript.Execute(script) {
+		return errors.New("iTerm2 AppleScript failed to create tab")
+	}
+	return nil
 }
 
-func (t *ITerm2) OpenNewWindow(dir string, pasteScript *string) bool {
+func (t *ITerm2) OpenNewWindow(dir string, pasteScript *string) error {
 	commands := "cd " + exec.Escape(dir)
 	if pasteScript != nil {
 		commands += "; " + exec.Escape(*pasteScript)
@@ -126,7 +133,10 @@ tell application "iTerm2"
         write text "` + commands + `"
     end tell
 end tell`
-	return t.AppleScript.Execute(script)
+	if !t.AppleScript.Execute(script) {
+		return errors.New("iTerm2 AppleScript failed to create window")
+	}
+	return nil
 }
 
 func (t *ITerm2) ListSessions() []Session {
@@ -180,14 +190,17 @@ func (t *ITerm2) FindSessionByWorkingDirectory(target string, subdirectoryOK boo
 	return findSessionByDir(t.ListSessions(), target, subdirectoryOK)
 }
 
-func (t *ITerm2) RunInActiveSession(command string) bool {
+func (t *ITerm2) RunInActiveSession(command string) error {
 	script := `
 tell application "iTerm2"
     tell current session of current window
         write text "` + exec.Escape(command) + `"
     end tell
 end tell`
-	return t.AppleScript.Execute(script)
+	if !t.AppleScript.Execute(script) {
+		return errors.New("iTerm2 AppleScript failed to send command to active session")
+	}
+	return nil
 }
 
 var _ Terminal = (*ITerm2)(nil)

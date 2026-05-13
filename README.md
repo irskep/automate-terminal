@@ -199,6 +199,14 @@ automate-terminal run-in-active-session "cd /tmp && ls -la"
 - `--output=json` - JSON for programmatic use
 - `--output=none` - Silent
 
+On failure, JSON output includes `"success": false` and an `"error"` field with a specific reason. For example, a missing accessibility permission on macOS produces:
+
+```json
+{"success": false, "error": "Ghostty failed to create tab (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)", "terminal": "Ghostty"}
+```
+
+Error messages include actionable remediation hints where possible (e.g. missing CLI tools, missing permissions, missing Kitty remote control config).
+
 ### Paste and Run
 
 Execute commands after creating/switching sessions.

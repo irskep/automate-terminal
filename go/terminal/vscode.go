@@ -1,7 +1,7 @@
 package terminal
 
 import (
-	"log/slog"
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -53,28 +53,24 @@ func (v *VSCode) GetCapabilities() Capabilities {
 	}
 }
 
-func (v *VSCode) SwitchToSessionByWorkingDirectory(dir string, pasteScript *string) bool {
-	if pasteScript != nil {
-		slog.Warn(v.DisplayName() + " cannot execute init scripts in integrated terminal")
-	}
+func (v *VSCode) SwitchToSessionByWorkingDirectory(dir string, pasteScript *string) error {
 	return v.runCLI(dir)
 }
 
-func (v *VSCode) OpenNewWindow(dir string, pasteScript *string) bool {
-	if pasteScript != nil {
-		slog.Warn(v.DisplayName() + " cannot execute init scripts via CLI")
-	}
+func (v *VSCode) OpenNewWindow(dir string, pasteScript *string) error {
 	return v.runCLI(dir)
 }
 
-func (v *VSCode) runCLI(dir string) bool {
+func (v *VSCode) runCLI(dir string) error {
 	cli := v.cliCommand()
 	if _, err := exec.LookPath(cli); err != nil {
-		slog.Error(cli+" CLI not found",
-			"hint", "Install via "+v.DisplayName()+" Command Palette: 'Shell Command: Install "+cli+" command in PATH'")
-		return false
+		return fmt.Errorf("%s CLI not found on PATH (install via %s Command Palette: 'Shell Command: Install %s command in PATH')",
+			cli, v.DisplayName(), cli)
 	}
-	return v.Runner.ExecuteRW([]string{cli, dir})
+	if !v.Runner.ExecuteRW([]string{cli, dir}) {
+		return fmt.Errorf("%s %s failed", cli, dir)
+	}
+	return nil
 }
 
 var _ Terminal = (*VSCode)(nil)

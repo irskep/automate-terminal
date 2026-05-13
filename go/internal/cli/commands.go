@@ -22,7 +22,6 @@ func cmdCheck(args []string, version string) int {
 	runner := &exec.Runner{}
 	t := detectTerminal(runner, *output)
 	if t == nil {
-		// Even for unsupported terminals, check outputs diagnostic info.
 		termProgram := os.Getenv("TERM_PROGRAM")
 		cwd, _ := os.Getwd()
 		emptyCaps := terminal.Capabilities{CanDetectWorkingDirectory: true}
@@ -135,24 +134,24 @@ func cmdNewTab(args []string) int {
 	}
 
 	pasteScript := pf.resolve(shellNameOrUnknown(t))
-	if t.OpenNewTab(dir, pasteScript) {
-		data := map[string]any{
-			"success":           true,
-			"action":            "created_new_tab",
-			"working_directory": dir,
-			"terminal":          t.DisplayName(),
-			"shell":             shellNameOrUnknown(t),
-		}
-		if v := pasteScriptExecuted(pasteScript, caps); v != nil {
-			data["paste_script_executed"] = *v
-		}
-		Output(cf.output, data, "Created new tab in "+dir)
-		return 0
+	if err := t.OpenNewTab(dir, pasteScript); err != nil {
+		OutputError(cf.output, err.Error(),
+			map[string]any{"terminal": t.DisplayName()})
+		return 1
 	}
 
-	OutputError(cf.output, "Failed to create tab",
-		map[string]any{"terminal": t.DisplayName()})
-	return 1
+	data := map[string]any{
+		"success":           true,
+		"action":            "created_new_tab",
+		"working_directory": dir,
+		"terminal":          t.DisplayName(),
+		"shell":             shellNameOrUnknown(t),
+	}
+	if v := pasteScriptExecuted(pasteScript, caps); v != nil {
+		data["paste_script_executed"] = *v
+	}
+	Output(cf.output, data, "Created new tab in "+dir)
+	return 0
 }
 
 func cmdNewWindow(args []string) int {
@@ -185,24 +184,24 @@ func cmdNewWindow(args []string) int {
 	}
 
 	pasteScript := pf.resolve(shellNameOrUnknown(t))
-	if t.OpenNewWindow(dir, pasteScript) {
-		data := map[string]any{
-			"success":           true,
-			"action":            "created_new_window",
-			"working_directory": dir,
-			"terminal":          t.DisplayName(),
-			"shell":             shellNameOrUnknown(t),
-		}
-		if v := pasteScriptExecuted(pasteScript, caps); v != nil {
-			data["paste_script_executed"] = *v
-		}
-		Output(cf.output, data, "Created new window in "+dir)
-		return 0
+	if err := t.OpenNewWindow(dir, pasteScript); err != nil {
+		OutputError(cf.output, err.Error(),
+			map[string]any{"terminal": t.DisplayName()})
+		return 1
 	}
 
-	OutputError(cf.output, "Failed to create window",
-		map[string]any{"terminal": t.DisplayName()})
-	return 1
+	data := map[string]any{
+		"success":           true,
+		"action":            "created_new_window",
+		"working_directory": dir,
+		"terminal":          t.DisplayName(),
+		"shell":             shellNameOrUnknown(t),
+	}
+	if v := pasteScriptExecuted(pasteScript, caps); v != nil {
+		data["paste_script_executed"] = *v
+	}
+	Output(cf.output, data, "Created new window in "+dir)
+	return 0
 }
 
 func cmdSwitchTo(args []string) int {
@@ -233,23 +232,22 @@ func cmdSwitchTo(args []string) int {
 
 	pasteScript := pf.resolve(shellNameOrUnknown(t))
 
-	success := false
+	var switchErr error
 
-	// Try session ID first.
 	if sessionID != "" && t.SessionExists(sessionID) {
-		success = t.SwitchToSession(sessionID, pasteScript)
+		switchErr = t.SwitchToSession(sessionID, pasteScript)
 	} else if workingDir != "" {
-		// Try finding session by working directory.
 		foundID := t.FindSessionByWorkingDirectory(workingDir, *subdirOK)
 		if foundID != nil {
-			success = t.SwitchToSession(*foundID, pasteScript)
+			switchErr = t.SwitchToSession(*foundID, pasteScript)
 		} else {
-			// Fall back to direct working directory switch (Terminal.app).
-			success = t.SwitchToSessionByWorkingDirectory(workingDir, pasteScript)
+			switchErr = t.SwitchToSessionByWorkingDirectory(workingDir, pasteScript)
 		}
+	} else {
+		switchErr = fmt.Errorf("session %s not found", sessionID)
 	}
 
-	if success {
+	if switchErr == nil {
 		caps := t.GetCapabilities()
 		data := map[string]any{
 			"success":  true,
@@ -271,9 +269,8 @@ func cmdSwitchTo(args []string) int {
 	}
 
 	// Build helpful error message.
-	errMsg := "No matching session found"
+	errMsg := switchErr.Error()
 	if !*subdirOK && workingDir != "" {
-		// Check if subdirectory matches exist.
 		if found := t.FindSessionByWorkingDirectory(workingDir, true); found != nil {
 			errMsg = fmt.Sprintf("No session found in %s, but sessions exist in subdirectories. "+
 				"Use --subdirectory-ok to match them.", workingDir)
@@ -363,17 +360,17 @@ func cmdRunInActiveSession(args []string) int {
 		return 1
 	}
 
-	if t.RunInActiveSession(script) {
-		data := map[string]any{
-			"success":  true,
-			"terminal": t.DisplayName(),
-			"command":  script,
-		}
-		Output(cf.output, data, "Command sent to active session")
-		return 0
+	if err := t.RunInActiveSession(script); err != nil {
+		OutputError(cf.output, err.Error(),
+			map[string]any{"terminal": t.DisplayName()})
+		return 1
 	}
 
-	OutputError(cf.output, "Failed to run command in active session",
-		map[string]any{"terminal": t.DisplayName()})
-	return 1
+	data := map[string]any{
+		"success":  true,
+		"terminal": t.DisplayName(),
+		"command":  script,
+	}
+	Output(cf.output, data, "Command sent to active session")
+	return 0
 }

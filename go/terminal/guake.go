@@ -1,6 +1,8 @@
 package terminal
 
 import (
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -80,46 +82,46 @@ func (g *Guake) SessionExists(sessionID string) bool {
 	return false
 }
 
-func (g *Guake) SwitchToSession(sessionID string, pasteScript *string) bool {
+func (g *Guake) SwitchToSession(sessionID string, pasteScript *string) error {
 	idx := g.callGDBusInt("get_index_from_uuid", sessionID)
 	if idx == nil || *idx < 0 {
-		slog.Error("Tab not found", "uuid", sessionID)
-		return false
+		return fmt.Errorf("Guake tab with UUID %s not found", sessionID)
 	}
 	if _, ok := g.callGDBus("select_tab", strconv.Itoa(*idx)); !ok {
-		return false
+		return errors.New("gdbus call to select_tab failed")
 	}
 	if g.callGDBusBool("get_visibility") == boolFalse {
 		if _, ok := g.callGDBus("show"); !ok {
-			return false
+			return errors.New("gdbus call to show Guake failed")
 		}
 	}
 	if pasteScript != nil {
-		_, ok := g.callGDBus("execute_command", *pasteScript+"\n")
-		return ok
+		if _, ok := g.callGDBus("execute_command", *pasteScript+"\n"); !ok {
+			return errors.New("gdbus call to execute_command failed")
+		}
 	}
-	return true
+	return nil
 }
 
-func (g *Guake) OpenNewTab(dir string, pasteScript *string) bool {
+func (g *Guake) OpenNewTab(dir string, pasteScript *string) error {
 	if _, ok := g.callGDBus("add_tab", dir); !ok {
-		return false
+		return errors.New("gdbus call to add_tab failed")
 	}
 	if g.callGDBusBool("get_visibility") == boolFalse {
 		if _, ok := g.callGDBus("show"); !ok {
-			return false
+			return errors.New("gdbus call to show Guake failed")
 		}
 	}
 	if pasteScript != nil {
-		_, ok := g.callGDBus("execute_command", *pasteScript+"\n")
-		return ok
+		if _, ok := g.callGDBus("execute_command", *pasteScript+"\n"); !ok {
+			return errors.New("gdbus call to execute_command failed")
+		}
 	}
-	return true
+	return nil
 }
 
-func (g *Guake) OpenNewWindow(dir string, pasteScript *string) bool {
+func (g *Guake) OpenNewWindow(dir string, pasteScript *string) error {
 	// Guake is a dropdown terminal; it doesn't support multiple windows.
-	slog.Debug("Guake doesn't support windows, creating tab instead")
 	return g.OpenNewTab(dir, pasteScript)
 }
 
@@ -144,9 +146,11 @@ func (g *Guake) FindSessionByWorkingDirectory(target string, subdirectoryOK bool
 	return findSessionByDir(g.ListSessions(), target, subdirectoryOK)
 }
 
-func (g *Guake) RunInActiveSession(command string) bool {
-	_, ok := g.callGDBus("execute_command", command+"\n")
-	return ok
+func (g *Guake) RunInActiveSession(command string) error {
+	if _, ok := g.callGDBus("execute_command", command+"\n"); !ok {
+		return errors.New("gdbus call to execute_command failed")
+	}
+	return nil
 }
 
 // gdbus helpers
