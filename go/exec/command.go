@@ -1,3 +1,5 @@
+// Package exec runs external commands (shell processes, osascript, CLI tools)
+// with support for dry-run mode and structured logging.
 package exec
 
 import (

@@ -1,3 +1,5 @@
+// Package detect identifies the terminal emulator hosting the current shell
+// session and returns an appropriate [terminal.Terminal] implementation.
 package detect
 
 import (
