@@ -1,3 +1,3 @@
-module github.com/stevelandeyasleep/automate-terminal
+module github.com/irskep/automate-terminal
 
 go 1.23

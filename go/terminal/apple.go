@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/stevelandeyasleep/automate-terminal/exec"
+	"github.com/irskep/automate-terminal/exec"
 )
 
 // TerminalApp implements Terminal for macOS Terminal.app.

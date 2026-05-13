@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/stevelandeyasleep/automate-terminal/internal/cli"
+	"github.com/irskep/automate-terminal/internal/cli"
 )
 
 // Set at build time with -ldflags.

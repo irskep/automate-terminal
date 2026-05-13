@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/stevelandeyasleep/automate-terminal/exec"
+	"github.com/irskep/automate-terminal/exec"
 )
 
 // Kitty implements Terminal for Kitty.

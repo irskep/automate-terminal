@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/stevelandeyasleep/automate-terminal/exec"
-	"github.com/stevelandeyasleep/automate-terminal/terminal"
+	"github.com/irskep/automate-terminal/exec"
+	"github.com/irskep/automate-terminal/terminal"
 )
 
 // Detect returns the terminal backend for the current environment, or nil.

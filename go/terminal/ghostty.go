@@ -3,7 +3,7 @@ package terminal
 import (
 	"log/slog"
 
-	"github.com/stevelandeyasleep/automate-terminal/exec"
+	"github.com/irskep/automate-terminal/exec"
 )
 
 // Ghostty implements Terminal for Ghostty on macOS.

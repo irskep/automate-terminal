@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/stevelandeyasleep/automate-terminal/detect"
-	"github.com/stevelandeyasleep/automate-terminal/exec"
-	"github.com/stevelandeyasleep/automate-terminal/terminal"
+	"github.com/irskep/automate-terminal/detect"
+	"github.com/irskep/automate-terminal/exec"
+	"github.com/irskep/automate-terminal/terminal"
 )
 
 // Run is the main entry point. Returns an exit code.

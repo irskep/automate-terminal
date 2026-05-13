@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/stevelandeyasleep/automate-terminal/exec"
-	"github.com/stevelandeyasleep/automate-terminal/terminal"
+	"github.com/irskep/automate-terminal/exec"
+	"github.com/irskep/automate-terminal/terminal"
 )
 
 func cmdCheck(args []string, version string) int {

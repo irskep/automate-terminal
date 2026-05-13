@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/stevelandeyasleep/automate-terminal/exec"
+	"github.com/irskep/automate-terminal/exec"
 )
 
 // ITerm2 implements Terminal for iTerm2 on macOS.

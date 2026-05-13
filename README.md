@@ -10,16 +10,16 @@ automate-terminal is a best-effort project. Some terminals do not support automa
 
 ```bash
 # mise (recommended)
-mise install ubi:stevelandeyasleep/automate-terminal
+mise install ubi:irskep/automate-terminal
 
 # ubi
-ubi --project stevelandeyasleep/automate-terminal --in ~/bin
+ubi --project irskep/automate-terminal --in ~/bin
 
 # go install
-go install github.com/stevelandeyasleep/automate-terminal/cmd/automate-terminal@latest
+go install github.com/irskep/automate-terminal/cmd/automate-terminal@latest
 ```
 
-Pre-built static binaries are also available on the [GitHub Releases](https://github.com/stevelandeyasleep/automate-terminal/releases) page for macOS and Linux.
+Pre-built static binaries are also available on the [GitHub Releases](https://github.com/irskep/automate-terminal/releases) page for macOS and Linux.
 
 For Guake terminal support on Linux, make sure the `gdbus` CLI from GLib/GIO is on your `PATH`. On most desktop distributions it already is; if you use a minimal system, install the GLib utilities package (e.g., `apt install libglib2.0-bin`, `dnf install glib2`, `pacman -S glib2`, or `apk add glib`).
 
@@ -230,14 +230,14 @@ Use `--dry-run` to see what commands would be executed without actually running 
 ## Go Module
 
 ```
-go get github.com/stevelandeyasleep/automate-terminal
+go get github.com/irskep/automate-terminal
 ```
 
 ```go
 import (
-    "github.com/stevelandeyasleep/automate-terminal/detect"
-    "github.com/stevelandeyasleep/automate-terminal/exec"
-    "github.com/stevelandeyasleep/automate-terminal/terminal"
+    "github.com/irskep/automate-terminal/detect"
+    "github.com/irskep/automate-terminal/exec"
+    "github.com/irskep/automate-terminal/terminal"
 )
 
 runner := &exec.Runner{}
