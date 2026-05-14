@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import shlex
 from pathlib import Path
 
 from automate_terminal.models import Capabilities
@@ -130,7 +131,7 @@ class KittyTerminal(BaseTerminal):
                     [
                         "sh",
                         "-c",
-                        f"cd {working_directory} && {session_init_script}",
+                        f"cd {shlex.quote(str(working_directory))} && {session_init_script}",
                     ]
                 )
                 return self.command_service.execute_rw(
@@ -167,7 +168,7 @@ class KittyTerminal(BaseTerminal):
                     [
                         "sh",
                         "-c",
-                        f"cd {working_directory} && {session_init_script}",
+                        f"cd {shlex.quote(str(working_directory))} && {session_init_script}",
                     ]
                 )
                 return self.command_service.execute_rw(

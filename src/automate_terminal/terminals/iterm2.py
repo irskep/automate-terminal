@@ -2,6 +2,7 @@
 
 import logging
 import os
+import shlex
 from pathlib import Path
 
 from automate_terminal.models import Capabilities
@@ -124,17 +125,19 @@ class ITerm2Terminal(BaseTerminal):
     ) -> bool:
         logger.debug(f"Opening new iTerm2 tab for {working_directory}")
 
-        commands = [f"cd {self.applescript.escape(working_directory)}"]
+        commands = [f"cd {shlex.quote(str(working_directory))}"]
 
         if session_init_script:
-            commands.append(self.applescript.escape(session_init_script))
+            commands.append(session_init_script)
+
+        combined = self.applescript.escape("; ".join(commands))
 
         applescript = f"""
         tell application "iTerm2"
             tell current window
                 create tab with default profile
                 tell current session of current tab
-                    write text "{"; ".join(commands)}"
+                    write text "{combined}"
                 end tell
             end tell
         end tell
@@ -147,15 +150,17 @@ class ITerm2Terminal(BaseTerminal):
     ) -> bool:
         logger.debug(f"Opening new iTerm2 window for {working_directory}")
 
-        commands = [f"cd {self.applescript.escape(working_directory)}"]
+        commands = [f"cd {shlex.quote(str(working_directory))}"]
         if session_init_script:
-            commands.append(self.applescript.escape(session_init_script))
+            commands.append(session_init_script)
+
+        combined = self.applescript.escape("; ".join(commands))
 
         applescript = f"""
         tell application "iTerm2"
             create window with default profile
             tell current session of current window
-                write text "{"; ".join(commands)}"
+                write text "{combined}"
             end tell
         end tell
         """

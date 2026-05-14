@@ -143,6 +143,23 @@ func findSessionByDir(sessions []Session, target string, subdirectoryOK bool) *s
 	return nil
 }
 
+// KnownShells is the authoritative list of shell process names used for
+// session discovery (e.g. matching lsof output or /proc/comm).
+var KnownShells = map[string]bool{
+	"bash": true, "zsh": true, "fish": true, "sh": true, "dash": true,
+	"osh": true, "nu": true, "pwsh": true,
+}
+
+// KnownShellsGrepPattern returns a grep -E pattern matching any known shell name,
+// derived from KnownShells.
+func KnownShellsGrepPattern() string {
+	names := make([]string, 0, len(KnownShells))
+	for name := range KnownShells {
+		names = append(names, name)
+	}
+	return "(" + strings.Join(names, "|") + ")"
+}
+
 // shellQuote wraps a string in single quotes for use in shell commands.
 // Interior single quotes are escaped via the '\'' idiom.
 func shellQuote(s string) string {

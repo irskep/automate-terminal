@@ -7,6 +7,9 @@ import (
 	"github.com/irskep/automate-terminal/exec"
 )
 
+// lsofShellPidCmd returns an AppleScript snippet that finds the shell PID for a TTY.
+var lsofShellPidCmd = `"lsof " & tabTTY & " | grep -E '` + KnownShellsGrepPattern() + `' | head -1 | awk '{print $2}'"`
+
 // TerminalApp implements Terminal for macOS Terminal.app.
 type TerminalApp struct {
 	Base
@@ -42,7 +45,7 @@ tell application "Terminal"
         repeat with theTab in tabs of theWindow
             try
                 set tabTTY to tty of theTab
-                set shellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|fish|osh|nu|pwsh|sh)' | head -1 | awk '{print $2}'"
+                set shellCmd to ` + lsofShellPidCmd + `
                 set shellPid to do shell script shellCmd
                 if shellPid is not "" then
                     set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{print $9}'"
@@ -164,7 +167,7 @@ tell application "Terminal"
         repeat with theTab in tabs of theWindow
             try
                 set tabTTY to tty of theTab
-                set shellCmd to "lsof " & tabTTY & " | grep -E '(zsh|bash|fish|osh|nu|pwsh|sh)' | head -1 | awk '{print $2}'"
+                set shellCmd to ` + lsofShellPidCmd + `
                 set shellPid to do shell script shellCmd
                 if shellPid is not "" then
                     set cwdCmd to "lsof -p " & shellPid & " | grep cwd | awk '{print $9}'"

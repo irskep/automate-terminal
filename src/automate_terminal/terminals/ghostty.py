@@ -48,7 +48,7 @@ class GhosttyMacTerminal(BaseTerminal):
         if session_init_script:
             commands.append(session_init_script)
 
-        command_string = self.applescript.escape("; ".join(commands))
+        escaped = self.applescript.escape("; ".join(commands))
 
         applescript = f"""
         tell application "Ghostty"
@@ -57,7 +57,7 @@ class GhosttyMacTerminal(BaseTerminal):
                 tell process "Ghostty"
                     keystroke "t" using command down
                     delay 0.3
-                    keystroke "{self.applescript.escape(command_string)}"
+                    keystroke "{escaped}"
                     key code 36 -- Return
                 end tell
             end tell
@@ -84,7 +84,7 @@ class GhosttyMacTerminal(BaseTerminal):
         if session_init_script:
             commands.append(session_init_script)
 
-        command_string = self.applescript.escape("; ".join(commands))
+        escaped = self.applescript.escape("; ".join(commands))
 
         applescript = f"""
         tell application "Ghostty"
@@ -93,7 +93,7 @@ class GhosttyMacTerminal(BaseTerminal):
                 tell process "Ghostty"
                     keystroke "n" using command down
                     delay 0.3
-                    keystroke "{self.applescript.escape(command_string)}"
+                    keystroke "{escaped}"
                     key code 36 -- Return
                 end tell
             end tell

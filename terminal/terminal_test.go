@@ -3,6 +3,7 @@ package terminal
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -124,5 +125,14 @@ func TestGetShellName(t *testing.T) {
 	got = b.GetShellName()
 	if got != nil {
 		t.Errorf("expected nil for empty SHELL, got %v", *got)
+	}
+}
+
+func TestKnownShellsGrepPattern_ContainsAllShells(t *testing.T) {
+	pattern := KnownShellsGrepPattern()
+	for name := range KnownShells {
+		if !strings.Contains(pattern, name) {
+			t.Errorf("KnownShellsGrepPattern() missing shell %q", name)
+		}
 	}
 }

@@ -20,9 +20,6 @@ const (
 	guakeDBusInterface = "org.guake3.RemoteControl"
 )
 
-var shellProcessNames = map[string]bool{
-	"bash": true, "zsh": true, "fish": true, "sh": true, "dash": true,
-}
 
 // Guake implements Terminal for the Guake dropdown terminal on Linux.
 type Guake struct {
@@ -259,7 +256,7 @@ func (g *Guake) getShellProcesses() []guakeProc {
 
 	var result []guakeProc
 	for pid, info := range processes {
-		if !shellProcessNames[info.name] {
+		if !KnownShells[info.name] {
 			continue
 		}
 		if !hasGuakeAncestor(pid, processes, guakePIDs) {
