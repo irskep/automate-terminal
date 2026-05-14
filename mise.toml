@@ -13,7 +13,7 @@ python.uv_venv_auto = true
 [tools]
 python = "3.12"
 uv = "latest"
-go = "1.23"
+go = "1.26"
 
 [env]
 _.python.venv = { path = ".venv" }
