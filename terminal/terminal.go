@@ -150,9 +150,14 @@ var KnownShells = map[string]bool{
 	"osh": true, "nu": true, "pwsh": true,
 }
 
-// KnownShellsGrepPattern returns a grep -E pattern matching any known shell name.
+// KnownShellsGrepPattern returns a grep -E pattern matching any known shell name,
+// derived from KnownShells.
 func KnownShellsGrepPattern() string {
-	return "(zsh|bash|fish|osh|nu|pwsh|sh|dash)"
+	names := make([]string, 0, len(KnownShells))
+	for name := range KnownShells {
+		names = append(names, name)
+	}
+	return "(" + strings.Join(names, "|") + ")"
 }
 
 // shellQuote wraps a string in single quotes for use in shell commands.
