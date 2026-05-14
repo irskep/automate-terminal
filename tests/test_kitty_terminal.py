@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-
 from automate_terminal.terminals.kitty import KittyTerminal
 
 
