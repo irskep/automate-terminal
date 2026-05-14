@@ -9,7 +9,17 @@ import (
 	"github.com/irskep/automate-terminal/terminal"
 )
 
+// withOverride sets AUTOMATE_TERMINAL_OVERRIDE for the duration of a test,
+// so detection succeeds in environments with no real terminal (like CI).
+func withOverride(t *testing.T, value string) {
+	t.Helper()
+	orig := os.Getenv("AUTOMATE_TERMINAL_OVERRIDE")
+	os.Setenv("AUTOMATE_TERMINAL_OVERRIDE", value)
+	t.Cleanup(func() { os.Setenv("AUTOMATE_TERMINAL_OVERRIDE", orig) })
+}
+
 func TestCmdCheck_JSON(t *testing.T) {
+	withOverride(t, "tmux")
 	got := captureStdout(t, func() {
 		rc := cmdCheck([]string{"--output=json"}, "1.0.0")
 		if rc != 0 {
@@ -29,7 +39,6 @@ func TestCmdCheck_JSON(t *testing.T) {
 }
 
 func TestCmdCheck_UnsupportedTerminal_JSON(t *testing.T) {
-	// Clear all detection env vars.
 	vars := []string{
 		"AUTOMATE_TERMINAL_OVERRIDE", "TMUX", "GUAKE_TAB_UUID",
 		"WEZTERM_PANE", "KITTY_WINDOW_ID", "CURSOR_TRACE_ID",
@@ -41,12 +50,12 @@ func TestCmdCheck_UnsupportedTerminal_JSON(t *testing.T) {
 	}
 	origTP := os.Getenv("TERM_PROGRAM")
 	os.Setenv("TERM_PROGRAM", "unsupported")
-	defer func() {
+	t.Cleanup(func() {
 		for k, v := range originals {
 			os.Setenv(k, v)
 		}
 		os.Setenv("TERM_PROGRAM", origTP)
-	}()
+	})
 
 	got := captureStdout(t, func() {
 		rc := cmdCheck([]string{"--output=json"}, "1.0.0")
@@ -67,6 +76,7 @@ func TestCmdCheck_UnsupportedTerminal_JSON(t *testing.T) {
 }
 
 func TestCmdCheck_TextOutput(t *testing.T) {
+	withOverride(t, "tmux")
 	got := captureStdout(t, func() {
 		rc := cmdCheck([]string{"--output=text"}, "1.0.0")
 		if rc != 0 {
@@ -106,6 +116,7 @@ func TestCmdNewWindow_MissingDir(t *testing.T) {
 }
 
 func TestCmdSwitchTo_MissingArgs(t *testing.T) {
+	withOverride(t, "tmux")
 	got := captureStderr(t, func() {
 		rc := cmdSwitchTo([]string{"--output=text"})
 		if rc != 1 {
@@ -133,19 +144,16 @@ func TestPasteScriptExecuted(t *testing.T) {
 	capsWithPaste := terminal.Capabilities{CanPasteCommands: true}
 	capsWithoutPaste := terminal.Capabilities{CanPasteCommands: false}
 
-	// No paste script: omit field.
 	if v := pasteScriptExecuted(nil, capsWithPaste); v != nil {
 		t.Errorf("expected nil when no paste script, got %v", *v)
 	}
 
-	// Paste script + terminal supports it: true.
 	script := "echo hi"
 	v := pasteScriptExecuted(&script, capsWithPaste)
 	if v == nil || !*v {
 		t.Error("expected true when terminal supports paste")
 	}
 
-	// Paste script + terminal doesn't support it: false.
 	v = pasteScriptExecuted(&script, capsWithoutPaste)
 	if v == nil || *v {
 		t.Error("expected false when terminal doesn't support paste")
