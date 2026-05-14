@@ -26,6 +26,6 @@ lint = "uv run ruff check"
 format = "uv run ruff format"
 format-check = "uv run ruff format --check"
 
-"go:build" = "cd go && go build -o ../automate-terminal ./cmd/automate-terminal"
-"go:vet" = "cd go && go vet ./..."
+"go:build" = "go build -o automate-terminal ./cmd/automate-terminal"
+"go:vet" = "go vet ./..."
 "go:run" = { depends = ["go:build"], run = "./automate-terminal" }
