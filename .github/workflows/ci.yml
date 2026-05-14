@@ -46,7 +46,7 @@ jobs:
       - name: Check formatting
         run: uv run ruff format --check
 
-  go-build:
+  go:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
