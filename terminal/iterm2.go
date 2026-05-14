@@ -1,7 +1,7 @@
 package terminal
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -95,46 +95,46 @@ tell application "iTerm2"
         end repeat
     end repeat
 end tell`
-	if !t.AppleScript.Execute(script) {
-		return errors.New("iTerm2 AppleScript failed to switch session")
+	if err := t.AppleScript.Execute(script); err != nil {
+		return fmt.Errorf("iTerm2 AppleScript failed to switch session: %w", err)
 	}
 	return nil
 }
 
 func (t *ITerm2) OpenNewTab(dir string, pasteScript *string) error {
-	commands := "cd " + exec.Escape(dir)
+	commands := "cd " + shellQuote(dir)
 	if pasteScript != nil {
-		commands += "; " + exec.Escape(*pasteScript)
+		commands += "; " + *pasteScript
 	}
 	script := `
 tell application "iTerm2"
     tell current window
         create tab with default profile
         tell current session of current tab
-            write text "` + commands + `"
+            write text "` + exec.Escape(commands) + `"
         end tell
     end tell
 end tell`
-	if !t.AppleScript.Execute(script) {
-		return errors.New("iTerm2 AppleScript failed to create tab")
+	if err := t.AppleScript.Execute(script); err != nil {
+		return fmt.Errorf("iTerm2 AppleScript failed to create tab: %w", err)
 	}
 	return nil
 }
 
 func (t *ITerm2) OpenNewWindow(dir string, pasteScript *string) error {
-	commands := "cd " + exec.Escape(dir)
+	commands := "cd " + shellQuote(dir)
 	if pasteScript != nil {
-		commands += "; " + exec.Escape(*pasteScript)
+		commands += "; " + *pasteScript
 	}
 	script := `
 tell application "iTerm2"
     create window with default profile
     tell current session of current window
-        write text "` + commands + `"
+        write text "` + exec.Escape(commands) + `"
     end tell
 end tell`
-	if !t.AppleScript.Execute(script) {
-		return errors.New("iTerm2 AppleScript failed to create window")
+	if err := t.AppleScript.Execute(script); err != nil {
+		return fmt.Errorf("iTerm2 AppleScript failed to create window: %w", err)
 	}
 	return nil
 }
@@ -197,8 +197,8 @@ tell application "iTerm2"
         write text "` + exec.Escape(command) + `"
     end tell
 end tell`
-	if !t.AppleScript.Execute(script) {
-		return errors.New("iTerm2 AppleScript failed to send command to active session")
+	if err := t.AppleScript.Execute(script); err != nil {
+		return fmt.Errorf("iTerm2 AppleScript failed to send command to active session: %w", err)
 	}
 	return nil
 }

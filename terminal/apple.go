@@ -1,7 +1,7 @@
 package terminal
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/irskep/automate-terminal/exec"
@@ -58,14 +58,16 @@ tell application "Terminal"
 end tell`
 	windowName, ok := t.AppleScript.ExecuteWithResult(findScript)
 	if !ok || windowName == "" {
-		return errors.New("no Terminal.app window found with that working directory")
+		return fmt.Errorf("no Terminal.app window found with that working directory")
 	}
 
 	if pasteScript != nil {
-		t.AppleScript.Execute(`
+		if err := t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + exec.Escape(*pasteScript) + `" in front window
-end tell`)
+end tell`); err != nil {
+			return fmt.Errorf("Terminal.app failed to execute paste script: %w", err)
+		}
 	}
 
 	escapedName := exec.Escape(windowName)
@@ -82,7 +84,7 @@ tell application "System Events"
 end tell`
 	result, ok := t.AppleScript.ExecuteWithResult(switchScript)
 	if !ok || !strings.HasPrefix(result, "success") {
-		return errors.New("failed to switch Terminal.app window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+		return fmt.Errorf("failed to switch Terminal.app window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
 	}
 	return nil
 }
@@ -94,7 +96,7 @@ func (t *TerminalApp) OpenNewTab(dir string, pasteScript *string) error {
 	}
 	escaped := exec.Escape(commands)
 
-	countResult, ok := t.Runner.ExecuteRWithOutput(
+	countResult, ok := t.Runner.RunOutput(
 		[]string{"osascript", "-e", `tell application "Terminal" to return count of windows`},
 	)
 	windowCount := 0
@@ -107,16 +109,16 @@ func (t *TerminalApp) OpenNewTab(dir string, pasteScript *string) error {
 	}
 
 	if windowCount == 0 {
-		if !t.AppleScript.Execute(`
+		if err := t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + escaped + `"
-end tell`) {
-			return errors.New("Terminal.app AppleScript failed to create window")
+end tell`); err != nil {
+			return fmt.Errorf("Terminal.app AppleScript failed to create window: %w", err)
 		}
 		return nil
 	}
 
-	success := t.AppleScript.Execute(`
+	err := t.AppleScript.Execute(`
 tell application "Terminal"
     activate
     tell application "System Events"
@@ -128,13 +130,13 @@ tell application "Terminal"
     do script "` + escaped + `" in selected tab of front window
 end tell`)
 
-	if !success {
+	if err != nil {
 		// Fall back to creating a window instead of a tab.
-		if !t.AppleScript.Execute(`
+		if err := t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + escaped + `"
-end tell`) {
-			return errors.New("Terminal.app failed to create tab or window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+end tell`); err != nil {
+			return fmt.Errorf("Terminal.app failed to create tab or window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility): %w", err)
 		}
 	}
 	return nil
@@ -145,11 +147,11 @@ func (t *TerminalApp) OpenNewWindow(dir string, pasteScript *string) error {
 	if pasteScript != nil {
 		commands += "; " + *pasteScript
 	}
-	if !t.AppleScript.Execute(`
+	if err := t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + exec.Escape(commands) + `"
-end tell`) {
-		return errors.New("Terminal.app AppleScript failed to create window")
+end tell`); err != nil {
+		return fmt.Errorf("Terminal.app AppleScript failed to create window: %w", err)
 	}
 	return nil
 }
@@ -192,11 +194,11 @@ end tell`
 }
 
 func (t *TerminalApp) RunInActiveSession(command string) error {
-	if !t.AppleScript.Execute(`
+	if err := t.AppleScript.Execute(`
 tell application "Terminal"
     do script "` + exec.Escape(command) + `" in selected tab of front window
-end tell`) {
-		return errors.New("Terminal.app AppleScript failed to send command to active session")
+end tell`); err != nil {
+		return fmt.Errorf("Terminal.app AppleScript failed to send command to active session: %w", err)
 	}
 	return nil
 }

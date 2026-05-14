@@ -1,7 +1,6 @@
 package terminal
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -46,7 +45,7 @@ func (t *Tmux) SessionExists(sessionID string) bool {
 	if sessionID == "" {
 		return false
 	}
-	output, ok := t.Runner.ExecuteRWithOutput(
+	output, ok := t.Runner.RunOutput(
 		[]string{"tmux", "list-panes", "-a", "-F", "#{pane_id}"},
 	)
 	if !ok {
@@ -61,21 +60,21 @@ func (t *Tmux) SessionExists(sessionID string) bool {
 }
 
 func (t *Tmux) SwitchToSession(sessionID string, pasteScript *string) error {
-	windowID, ok := t.Runner.ExecuteRWithOutput(
+	windowID, ok := t.Runner.RunOutput(
 		[]string{"tmux", "display-message", "-p", "-t", sessionID, "-F", "#{window_id}"},
 	)
 	if !ok {
 		return fmt.Errorf("failed to get window for tmux pane %s", sessionID)
 	}
-	if !t.Runner.ExecuteRW([]string{"tmux", "select-window", "-t", windowID}) {
-		return fmt.Errorf("tmux select-window failed for window %s", windowID)
+	if err := t.Runner.RunMutating([]string{"tmux", "select-window", "-t", windowID}); err != nil {
+		return fmt.Errorf("tmux select-window failed for window %s: %w", windowID, err)
 	}
-	if !t.Runner.ExecuteRW([]string{"tmux", "select-pane", "-t", sessionID}) {
-		return fmt.Errorf("tmux select-pane failed for pane %s", sessionID)
+	if err := t.Runner.RunMutating([]string{"tmux", "select-pane", "-t", sessionID}); err != nil {
+		return fmt.Errorf("tmux select-pane failed for pane %s: %w", sessionID, err)
 	}
 	if pasteScript != nil {
-		if !t.Runner.ExecuteRW([]string{"tmux", "send-keys", "-t", sessionID, *pasteScript, "Enter"}) {
-			return errors.New("tmux send-keys failed")
+		if err := t.Runner.RunMutating([]string{"tmux", "send-keys", "-t", sessionID, *pasteScript, "Enter"}); err != nil {
+			return fmt.Errorf("tmux send-keys failed: %w", err)
 		}
 	}
 	return nil
@@ -86,23 +85,22 @@ func (t *Tmux) OpenNewTab(dir string, pasteScript *string) error {
 	if pasteScript != nil {
 		cmd = append(cmd, *pasteScript)
 	}
-	if !t.Runner.ExecuteRW(cmd) {
-		return errors.New("tmux new-window failed")
+	if err := t.Runner.RunMutating(cmd); err != nil {
+		return fmt.Errorf("tmux new-window failed: %w", err)
 	}
 	return nil
 }
 
 func (t *Tmux) OpenNewWindow(dir string, pasteScript *string) error {
-	cmd := []string{"tmux", "new-session", "-d", "-c", dir}
-	if !t.Runner.ExecuteRW(cmd) {
-		return errors.New("tmux new-session failed")
+	if err := t.Runner.RunMutating([]string{"tmux", "new-session", "-d", "-c", dir}); err != nil {
+		return fmt.Errorf("tmux new-session failed: %w", err)
 	}
 	if pasteScript != nil {
-		sid, ok := t.Runner.ExecuteRWithOutput(
+		sid, ok := t.Runner.RunOutput(
 			[]string{"tmux", "display-message", "-p", "-t", "#{session_id}"},
 		)
 		if ok {
-			t.Runner.ExecuteRW(
+			_ = t.Runner.RunMutating(
 				[]string{"tmux", "send-keys", "-t", sid, *pasteScript, "Enter"},
 			)
 		}
@@ -111,7 +109,7 @@ func (t *Tmux) OpenNewWindow(dir string, pasteScript *string) error {
 }
 
 func (t *Tmux) ListSessions() []Session {
-	output, ok := t.Runner.ExecuteRWithOutput(
+	output, ok := t.Runner.RunOutput(
 		[]string{"tmux", "list-panes", "-a", "-F", "#{pane_id}|#{pane_current_path}"},
 	)
 	if !ok {
@@ -142,10 +140,10 @@ func (t *Tmux) FindSessionByWorkingDirectory(target string, subdirectoryOK bool)
 func (t *Tmux) RunInActiveSession(command string) error {
 	pane := t.GetCurrentSessionID()
 	if pane == nil {
-		return errors.New("could not determine current tmux pane (TMUX_PANE not set)")
+		return fmt.Errorf("could not determine current tmux pane (TMUX_PANE not set)")
 	}
-	if !t.Runner.ExecuteRW([]string{"tmux", "send-keys", "-t", *pane, command, "Enter"}) {
-		return errors.New("tmux send-keys failed")
+	if err := t.Runner.RunMutating([]string{"tmux", "send-keys", "-t", *pane, command, "Enter"}); err != nil {
+		return fmt.Errorf("tmux send-keys failed: %w", err)
 	}
 	return nil
 }

@@ -2,7 +2,6 @@ package terminal
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -59,14 +58,14 @@ func (k *Kitty) SessionExists(sessionID string) bool {
 
 func (k *Kitty) SwitchToSession(sessionID string, pasteScript *string) error {
 	match := "id:" + sessionID
-	if !k.Runner.ExecuteRW([]string{"kitten", "@", "focus-window", "--match", match}) {
-		return fmt.Errorf("kitten @ focus-window failed for window %s (is allow_remote_control enabled in kitty.conf?)", sessionID)
+	if err := k.Runner.RunMutating([]string{"kitten", "@", "focus-window", "--match", match}); err != nil {
+		return fmt.Errorf("kitten @ focus-window failed for window %s (is allow_remote_control enabled in kitty.conf?): %w", sessionID, err)
 	}
 	if pasteScript != nil {
-		if !k.Runner.ExecuteRW([]string{
+		if err := k.Runner.RunMutating([]string{
 			"kitten", "@", "send-text", "--match", match, *pasteScript + "\n",
-		}) {
-			return errors.New("kitten @ send-text failed")
+		}); err != nil {
+			return fmt.Errorf("kitten @ send-text failed: %w", err)
 		}
 	}
 	return nil
@@ -75,10 +74,10 @@ func (k *Kitty) SwitchToSession(sessionID string, pasteScript *string) error {
 func (k *Kitty) OpenNewTab(dir string, pasteScript *string) error {
 	cmd := []string{"kitten", "@", "launch", "--type=tab", "--cwd", dir}
 	if pasteScript != nil {
-		cmd = append(cmd, "sh", "-c", "cd "+dir+" && "+*pasteScript)
+		cmd = append(cmd, "sh", "-c", "cd "+shellQuote(dir)+" && "+*pasteScript)
 	}
-	if !k.Runner.ExecuteRW(cmd) {
-		return errors.New("kitten @ launch --type=tab failed (is allow_remote_control enabled in kitty.conf?)")
+	if err := k.Runner.RunMutating(cmd); err != nil {
+		return fmt.Errorf("kitten @ launch --type=tab failed (is allow_remote_control enabled in kitty.conf?): %w", err)
 	}
 	return nil
 }
@@ -86,10 +85,10 @@ func (k *Kitty) OpenNewTab(dir string, pasteScript *string) error {
 func (k *Kitty) OpenNewWindow(dir string, pasteScript *string) error {
 	cmd := []string{"kitten", "@", "launch", "--type=os-window", "--cwd", dir}
 	if pasteScript != nil {
-		cmd = append(cmd, "sh", "-c", "cd "+dir+" && "+*pasteScript)
+		cmd = append(cmd, "sh", "-c", "cd "+shellQuote(dir)+" && "+*pasteScript)
 	}
-	if !k.Runner.ExecuteRW(cmd) {
-		return errors.New("kitten @ launch --type=os-window failed (is allow_remote_control enabled in kitty.conf?)")
+	if err := k.Runner.RunMutating(cmd); err != nil {
+		return fmt.Errorf("kitten @ launch --type=os-window failed (is allow_remote_control enabled in kitty.conf?): %w", err)
 	}
 	return nil
 }
@@ -115,12 +114,12 @@ func (k *Kitty) FindSessionByWorkingDirectory(target string, subdirectoryOK bool
 func (k *Kitty) RunInActiveSession(command string) error {
 	wid := k.GetCurrentSessionID()
 	if wid == nil {
-		return errors.New("could not determine current Kitty window (KITTY_WINDOW_ID not set)")
+		return fmt.Errorf("could not determine current Kitty window (KITTY_WINDOW_ID not set)")
 	}
-	if !k.Runner.ExecuteRW([]string{
+	if err := k.Runner.RunMutating([]string{
 		"kitten", "@", "send-text", "--match", "id:" + *wid, command + "\n",
-	}) {
-		return errors.New("kitten @ send-text failed (is allow_remote_control enabled in kitty.conf?)")
+	}); err != nil {
+		return fmt.Errorf("kitten @ send-text failed (is allow_remote_control enabled in kitty.conf?): %w", err)
 	}
 	return nil
 }
@@ -141,7 +140,7 @@ type kittyOSWindow struct {
 }
 
 func (k *Kitty) getAllWindows() []kittyWindow {
-	output, ok := k.Runner.ExecuteRWithOutput([]string{"kitten", "@", "ls"})
+	output, ok := k.Runner.RunOutput([]string{"kitten", "@", "ls"})
 	if !ok {
 		return nil
 	}

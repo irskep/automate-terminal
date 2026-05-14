@@ -2,7 +2,6 @@ package terminal
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -58,53 +57,53 @@ func (w *WezTerm) SessionExists(sessionID string) bool {
 }
 
 func (w *WezTerm) SwitchToSession(sessionID string, pasteScript *string) error {
-	if !w.Runner.ExecuteRW([]string{"wezterm", "cli", "activate-pane", "--pane-id", sessionID}) {
-		return fmt.Errorf("wezterm cli activate-pane failed for pane %s", sessionID)
+	if err := w.Runner.RunMutating([]string{"wezterm", "cli", "activate-pane", "--pane-id", sessionID}); err != nil {
+		return fmt.Errorf("wezterm cli activate-pane failed for pane %s: %w", sessionID, err)
 	}
 	if pasteScript != nil {
-		if !w.Runner.ExecuteRW([]string{
+		if err := w.Runner.RunMutating([]string{
 			"wezterm", "cli", "send-text", "--pane-id", sessionID, "--no-paste",
 			*pasteScript + "\n",
-		}) {
-			return errors.New("wezterm cli send-text failed")
+		}); err != nil {
+			return fmt.Errorf("wezterm cli send-text failed: %w", err)
 		}
 	}
 	return nil
 }
 
 func (w *WezTerm) OpenNewTab(dir string, pasteScript *string) error {
-	output, ok := w.Runner.ExecuteRWithOutput(
+	output, ok := w.Runner.RunOutput(
 		[]string{"wezterm", "cli", "spawn", "--cwd", dir},
 	)
 	if !ok {
-		return errors.New("wezterm cli spawn failed")
+		return fmt.Errorf("wezterm cli spawn failed")
 	}
 	if pasteScript != nil {
 		paneID := output
-		if !w.Runner.ExecuteRW([]string{
+		if err := w.Runner.RunMutating([]string{
 			"wezterm", "cli", "send-text", "--pane-id", paneID, "--no-paste",
 			*pasteScript + "\n",
-		}) {
-			return errors.New("wezterm cli send-text failed after creating tab")
+		}); err != nil {
+			return fmt.Errorf("wezterm cli send-text failed after creating tab: %w", err)
 		}
 	}
 	return nil
 }
 
 func (w *WezTerm) OpenNewWindow(dir string, pasteScript *string) error {
-	output, ok := w.Runner.ExecuteRWithOutput(
+	output, ok := w.Runner.RunOutput(
 		[]string{"wezterm", "cli", "spawn", "--new-window", "--cwd", dir},
 	)
 	if !ok {
-		return errors.New("wezterm cli spawn --new-window failed")
+		return fmt.Errorf("wezterm cli spawn --new-window failed")
 	}
 	if pasteScript != nil {
 		paneID := output
-		if !w.Runner.ExecuteRW([]string{
+		if err := w.Runner.RunMutating([]string{
 			"wezterm", "cli", "send-text", "--pane-id", paneID, "--no-paste",
 			*pasteScript + "\n",
-		}) {
-			return errors.New("wezterm cli send-text failed after creating window")
+		}); err != nil {
+			return fmt.Errorf("wezterm cli send-text failed after creating window: %w", err)
 		}
 	}
 	return nil
@@ -132,13 +131,13 @@ func (w *WezTerm) FindSessionByWorkingDirectory(target string, subdirectoryOK bo
 func (w *WezTerm) RunInActiveSession(command string) error {
 	pane := w.GetCurrentSessionID()
 	if pane == nil {
-		return errors.New("could not determine current WezTerm pane (WEZTERM_PANE not set)")
+		return fmt.Errorf("could not determine current WezTerm pane (WEZTERM_PANE not set)")
 	}
-	if !w.Runner.ExecuteRW([]string{
+	if err := w.Runner.RunMutating([]string{
 		"wezterm", "cli", "send-text", "--pane-id", *pane, "--no-paste",
 		command + "\n",
-	}) {
-		return errors.New("wezterm cli send-text failed")
+	}); err != nil {
+		return fmt.Errorf("wezterm cli send-text failed: %w", err)
 	}
 	return nil
 }
@@ -149,7 +148,7 @@ type weztermPane struct {
 }
 
 func (w *WezTerm) listPanes() []weztermPane {
-	output, ok := w.Runner.ExecuteRWithOutput(
+	output, ok := w.Runner.RunOutput(
 		[]string{"wezterm", "cli", "list", "--format", "json"},
 	)
 	if !ok {

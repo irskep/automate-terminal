@@ -163,7 +163,7 @@ func (g *Guake) callGDBus(method string, args ...string) (string, bool) {
 		"--method", guakeDBusInterface + "." + method,
 	}
 	cmd = append(cmd, args...)
-	output, ok := g.Runner.ExecuteRWithOutput(cmd)
+	output, ok := g.Runner.RunOutput(cmd)
 	return output, ok
 }
 

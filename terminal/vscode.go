@@ -67,8 +67,8 @@ func (v *VSCode) runCLI(dir string) error {
 		return fmt.Errorf("%s CLI not found on PATH (install via %s Command Palette: 'Shell Command: Install %s command in PATH')",
 			cli, v.DisplayName(), cli)
 	}
-	if !v.Runner.ExecuteRW([]string{cli, dir}) {
-		return fmt.Errorf("%s %s failed", cli, dir)
+	if err := v.Runner.RunMutating([]string{cli, dir}); err != nil {
+		return fmt.Errorf("%s %s failed: %w", cli, dir, err)
 	}
 	return nil
 }

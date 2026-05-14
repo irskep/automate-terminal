@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"errors"
 	"log/slog"
 	"os/exec"
 	"strings"
@@ -18,20 +19,22 @@ func (a *AppleScript) Available() bool {
 	return err == nil
 }
 
-// Execute runs an AppleScript and returns whether it succeeded.
-func (a *AppleScript) Execute(script string) bool {
+// Execute runs a mutating AppleScript. Returns an error on failure.
+func (a *AppleScript) Execute(script string) error {
 	if !a.Available() {
-		slog.Warn("osascript not found on PATH")
-		return false
+		return errors.New("osascript not found on PATH")
 	}
 	if a.Runner.DryRun {
 		slog.Info("DRY RUN - Would execute AppleScript", "script", script)
-		return true
+		return nil
 	}
-	return a.Runner.ExecuteR([]string{"osascript", "-e", script})
+	if !a.Runner.Run([]string{"osascript", "-e", script}) {
+		return errors.New("osascript execution failed")
+	}
+	return nil
 }
 
-// ExecuteWithResult runs an AppleScript and returns its output.
+// ExecuteWithResult runs a read-only AppleScript and returns its output.
 // Executes even in dry-run mode since it is a read-only query.
 func (a *AppleScript) ExecuteWithResult(script string) (string, bool) {
 	if !a.Available() {
@@ -41,7 +44,7 @@ func (a *AppleScript) ExecuteWithResult(script string) (string, bool) {
 	if a.Runner.DryRun {
 		slog.Debug("DRY RUN - Executing query AppleScript", "script", script)
 	}
-	return a.Runner.ExecuteRWithOutput([]string{"osascript", "-e", script})
+	return a.Runner.RunOutput([]string{"osascript", "-e", script})
 }
 
 // Escape escapes a string for embedding in AppleScript double-quoted strings.

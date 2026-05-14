@@ -1,7 +1,7 @@
 package terminal
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/irskep/automate-terminal/exec"
 )
@@ -39,7 +39,7 @@ func (g *Ghostty) OpenNewTab(dir string, pasteScript *string) error {
 		commands += "; " + *pasteScript
 	}
 
-	if !g.AppleScript.Execute(`
+	if err := g.AppleScript.Execute(`
 tell application "Ghostty"
     activate
     tell application "System Events"
@@ -50,8 +50,8 @@ tell application "Ghostty"
             key code 36 -- Return
         end tell
     end tell
-end tell`) {
-		return errors.New("Ghostty failed to create tab (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+end tell`); err != nil {
+		return fmt.Errorf("Ghostty failed to create tab (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility): %w", err)
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func (g *Ghostty) OpenNewWindow(dir string, pasteScript *string) error {
 		commands += "; " + *pasteScript
 	}
 
-	if !g.AppleScript.Execute(`
+	if err := g.AppleScript.Execute(`
 tell application "Ghostty"
     activate
     tell application "System Events"
@@ -73,21 +73,21 @@ tell application "Ghostty"
             key code 36 -- Return
         end tell
     end tell
-end tell`) {
-		return errors.New("Ghostty failed to create window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+end tell`); err != nil {
+		return fmt.Errorf("Ghostty failed to create window (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility): %w", err)
 	}
 	return nil
 }
 
 func (g *Ghostty) RunInActiveSession(command string) error {
-	if !g.AppleScript.Execute(`
+	if err := g.AppleScript.Execute(`
 tell application "System Events"
     tell process "Ghostty"
         keystroke "` + exec.Escape(command) + `"
         key code 36
     end tell
-end tell`) {
-		return errors.New("Ghostty failed to send command (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility)")
+end tell`); err != nil {
+		return fmt.Errorf("Ghostty failed to send command (missing accessibility permissions? grant accessibility permissions to the calling application in System Settings -> Privacy & Security -> Accessibility): %w", err)
 	}
 	return nil
 }
