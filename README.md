@@ -237,30 +237,58 @@ Use `--dry-run` to see what commands would be executed without actually running 
 
 ## Go Module
 
+automate-terminal can be imported as a Go library. Module versions follow git tags (`v0.2.0`, etc.), which are the same tags used for binary releases.
+
 ```
-go get github.com/irskep/automate-terminal
+go get github.com/irskep/automate-terminal@latest
 ```
+
+Usage:
 
 ```go
+package main
+
 import (
+    "log"
+
     "github.com/irskep/automate-terminal/detect"
     "github.com/irskep/automate-terminal/exec"
-    "github.com/irskep/automate-terminal/terminal"
 )
 
-runner := &exec.Runner{}
-t := detect.Detect(runner)
-if t == nil {
-    log.Fatal("unsupported terminal")
-}
+func main() {
+    runner := &exec.Runner{}
+    t := detect.Detect(runner)
+    if t == nil {
+        log.Fatal("unsupported terminal")
+    }
 
-caps := t.GetCapabilities()
-t.OpenNewTab("/path/to/dir", nil)
-sessions := t.ListSessions()
-t.RunInActiveSession("git status")
+    // Check what the terminal can do.
+    caps := t.GetCapabilities()
+    if caps.CanCreateTabs {
+        if err := t.OpenNewTab("/path/to/dir", nil); err != nil {
+            log.Fatal(err)
+        }
+    }
+
+    // List open sessions.
+    for _, s := range t.ListSessions() {
+        log.Printf("%s -> %s", s.SessionID, s.WorkingDirectory)
+    }
+
+    // Send a command to the active session.
+    if err := t.RunInActiveSession("git status"); err != nil {
+        log.Fatal(err)
+    }
+}
 ```
 
-See `terminal/terminal.go` for the full `Terminal` interface.
+The three public packages are:
+
+- `terminal` -- the `Terminal` interface, `Capabilities`, `Session`, and all backend implementations
+- `detect` -- `Detect(runner)` returns the appropriate backend for the current environment
+- `exec` -- `Runner` for subprocess execution (with dry-run support) and `AppleScript` helpers
+
+Full API docs are on [pkg.go.dev](https://pkg.go.dev/github.com/irskep/automate-terminal) once the module is tagged.
 
 ## References
 
