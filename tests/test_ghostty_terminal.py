@@ -18,8 +18,8 @@ def test_open_new_tab_no_double_escape(fake_applescript, fake_command):
 
     # A single backslash before the quote = correctly escaped once.
     # Double-escaped would produce \\\".
-    assert r'echo \"hello\"' in script
-    assert r'echo \\\"hello\\\"' not in script
+    assert r"echo \"hello\"" in script
+    assert r"echo \\\"hello\\\"" not in script
 
 
 def test_open_new_window_no_double_escape(fake_applescript, fake_command):
@@ -33,5 +33,5 @@ def test_open_new_window_no_double_escape(fake_applescript, fake_command):
     assert len(fake_applescript.executed_scripts) == 1
     _, script = fake_applescript.executed_scripts[0]
 
-    assert r'echo \"hello\"' in script
-    assert r'echo \\\"hello\\\"' not in script
+    assert r"echo \"hello\"" in script
+    assert r"echo \\\"hello\\\"" not in script
