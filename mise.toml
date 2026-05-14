@@ -13,6 +13,7 @@ python.uv_venv_auto = true
 [tools]
 python = "3.12"
 uv = "latest"
+go = "1.26"
 
 [env]
 _.python.venv = { path = ".venv" }
@@ -24,3 +25,8 @@ test = "uv run pytest"
 lint = "uv run ruff check"
 format = "uv run ruff format"
 format-check = "uv run ruff format --check"
+
+"go:build" = "go build -o automate-terminal ./cmd/automate-terminal"
+"go:test" = "go test ./..."
+"go:vet" = "go vet ./..."
+"go:run" = { depends = ["go:build"], run = "./automate-terminal" }

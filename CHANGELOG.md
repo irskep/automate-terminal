@@ -2,11 +2,18 @@
 
 <!-- loosely based on https://keepachangelog.com/en/1.0.0/ -->
 
-## 0.1.11 - Unreleased
+## 0.2.0 - Unreleased
 
 ### Added
 
+- Pre-built static binaries for darwin/arm64, linux/amd64, and linux/arm64.
+  No runtime dependencies.
+
 ### Changed
+
+- Rewritten in Go. Importable as a Go module.
+- Flags must come before positional arguments
+  (e.g. `automate-terminal new-tab --dry-run /path`).
 
 ### Fixed
 
